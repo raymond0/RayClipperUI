@@ -372,10 +372,10 @@ struct coord geom_interestion_of_rect( struct coord *p1, struct coord *p2, const
     
     struct coord ret;
     
-    bool leftPossible =   ( p1->x <= r->l.x && p2->x >= r->l.x ) || ( p2->x <= r->l.x && p1->x >= r->l.x );
-    bool rightPossible =  ( p1->x <= r->h.x && p2->x >= r->h.x ) || ( p2->x <= r->h.x && p1->x >= r->h.x );
-    bool bottomPossible = ( p1->y <= r->l.y && p2->y >= r->l.y ) || ( p2->y <= r->l.y && p1->y >= r->l.y );
-    bool topPossible =    ( p1->y <= r->h.y && p2->y >= r->h.y ) || ( p2->y <= r->h.y && p1->y >= r->h.y );
+    bool leftPossible =   ( p1->x < r->l.x && p2->x >= r->l.x ) || ( p2->x < r->l.x && p1->x >= r->l.x );
+    bool rightPossible =  ( p1->x <= r->h.x && p2->x > r->h.x ) || ( p2->x <= r->h.x && p1->x > r->h.x );
+    bool bottomPossible = ( p1->y < r->l.y && p2->y >= r->l.y ) || ( p2->y < r->l.y && p1->y >= r->l.y );
+    bool topPossible =    ( p1->y <= r->h.y && p2->y > r->h.y ) || ( p2->y <= r->h.y && p1->y > r->h.y );
 
 
     // Left + Right
@@ -418,10 +418,10 @@ int geom_intersections_of_rect( struct coord *p1, struct coord *p2, const struct
 {
     int nrFound = 0;
     
-    bool leftPossible =   ( p1->x <= r->l.x && p2->x >= r->l.x ) || ( p2->x <= r->l.x && p1->x >= r->l.x );
-    bool rightPossible =  ( p1->x <= r->h.x && p2->x >= r->h.x ) || ( p2->x <= r->h.x && p1->x >= r->h.x );
-    bool bottomPossible = ( p1->y <= r->l.y && p2->y >= r->l.y ) || ( p2->y <= r->l.y && p1->y >= r->l.y );
-    bool topPossible =    ( p1->y <= r->h.y && p2->y >= r->h.y ) || ( p2->y <= r->h.y && p1->y >= r->h.y );
+    bool leftPossible =   ( p1->x < r->l.x && p2->x >= r->l.x ) || ( p2->x < r->l.x && p1->x >= r->l.x );
+    bool rightPossible =  ( p1->x <= r->h.x && p2->x > r->h.x ) || ( p2->x <= r->h.x && p1->x > r->h.x );
+    bool bottomPossible = ( p1->y < r->l.y && p2->y >= r->l.y ) || ( p2->y < r->l.y && p1->y >= r->l.y );
+    bool topPossible =    ( p1->y <= r->h.y && p2->y > r->h.y ) || ( p2->y <= r->h.y && p1->y > r->h.y );
     
     
     struct coord ret;
