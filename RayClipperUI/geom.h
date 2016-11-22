@@ -51,7 +51,7 @@ double coord_distance(struct coord from, struct coord to);
 void geom_coord_copy(struct coord *from, struct coord *to, int count, int reverse);
 void geom_coord_revert(struct coord *c, int count);
 int geom_line_middle(struct coord *p, int count, struct coord *c);
-long long geom_poly_area(struct coord *c, int count);
+long long geom_poly_area(const struct coord *c, int count);
 int geom_poly_centroid(struct coord *c, int count, struct coord *r);
 int geom_poly_point_inside(const struct coord *cp, int count, const struct coord *c);
 int geom_poly_closest_point(struct coord *pl, int count, struct coord *p, struct coord *c);

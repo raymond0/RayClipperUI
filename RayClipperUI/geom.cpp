@@ -93,7 +93,7 @@ geom_coord_revert(struct coord *c, int count)
 
 
 long long
-geom_poly_area(struct coord *c, int count)
+geom_poly_area(const struct coord *c, int count)
 {
 	long long area=0;
 	int i,j=0;
@@ -182,9 +182,10 @@ geom_poly_closest_point(struct coord *pl, int count, struct coord *p, struct coo
 
 
 int
-geom_poly_point_inside(const struct coord *cp, int count, const struct coord *c)
+geom_poly_point_inside(const struct coord *coords, int count, const struct coord *c)
 {
 	int ret=0;
+    const struct coord *cp = coords;
 	const struct coord *last=cp+count-1;
 	while (cp < last)
     {
@@ -201,6 +202,17 @@ geom_poly_point_inside(const struct coord *cp, int count, const struct coord *c)
 		}
 		cp++;
 	}
+    
+    int lastIndex = count - 1;
+    if ( coords[0].x != coords[lastIndex].x || coords[0].y != coords[lastIndex].y )
+    {
+        if ((coords[lastIndex].y > c->y) != (coords[0].y > c->y) &&
+            c->x < ( (long long) coords[0].x - coords[lastIndex].x ) * ( c->y -coords[lastIndex].y ) / ( coords[0].y - coords[lastIndex].y ) + coords[lastIndex].x )
+        {
+            ret=!ret;
+        }
+    }
+    
 	return ret;
 }
 
