@@ -1,0 +1,440 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		712AA12D1DE3B89600D9616E /* ClipperWrapper.mm in Sources */ = {isa = PBXBuildFile; fileRef = 712AA12B1DE3B89600D9616E /* ClipperWrapper.mm */; };
+		712AA12E1DE3C02D00D9616E /* rayclipper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 71FBF29C1DE295F500C75E17 /* rayclipper.cpp */; };
+		71FBF2761DE2931A00C75E17 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 71FBF2751DE2931A00C75E17 /* AppDelegate.m */; };
+		71FBF2791DE2931A00C75E17 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 71FBF2781DE2931A00C75E17 /* main.m */; };
+		71FBF27C1DE2931A00C75E17 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 71FBF27B1DE2931A00C75E17 /* ViewController.m */; };
+		71FBF27E1DE2931A00C75E17 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 71FBF27D1DE2931A00C75E17 /* Assets.xcassets */; };
+		71FBF2811DE2931A00C75E17 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 71FBF27F1DE2931A00C75E17 /* Main.storyboard */; };
+		71FBF28C1DE2931A00C75E17 /* RayClipperUIUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 71FBF28B1DE2931A00C75E17 /* RayClipperUIUITests.m */; };
+		71FBF2981DE2936B00C75E17 /* PolygonView.m in Sources */ = {isa = PBXBuildFile; fileRef = 71FBF2971DE2936B00C75E17 /* PolygonView.m */; };
+		71FBF29D1DE295F500C75E17 /* geom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 71FBF2991DE295F500C75E17 /* geom.cpp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		71FBF2881DE2931A00C75E17 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 71FBF2691DE2931A00C75E17 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 71FBF2701DE2931A00C75E17;
+			remoteInfo = RayClipperUI;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		712AA12B1DE3B89600D9616E /* ClipperWrapper.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ClipperWrapper.mm; sourceTree = "<group>"; };
+		712AA12C1DE3B89600D9616E /* ClipperWrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ClipperWrapper.h; sourceTree = "<group>"; };
+		71FBF2711DE2931A00C75E17 /* RayClipperUI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RayClipperUI.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		71FBF2741DE2931A00C75E17 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		71FBF2751DE2931A00C75E17 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		71FBF2781DE2931A00C75E17 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		71FBF27A1DE2931A00C75E17 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
+		71FBF27B1DE2931A00C75E17 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
+		71FBF27D1DE2931A00C75E17 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		71FBF2801DE2931A00C75E17 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		71FBF2821DE2931A00C75E17 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		71FBF2871DE2931A00C75E17 /* RayClipperUIUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RayClipperUIUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		71FBF28B1DE2931A00C75E17 /* RayClipperUIUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = RayClipperUIUITests.m; sourceTree = "<group>"; };
+		71FBF28D1DE2931A00C75E17 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		71FBF2961DE2936B00C75E17 /* PolygonView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PolygonView.h; sourceTree = "<group>"; };
+		71FBF2971DE2936B00C75E17 /* PolygonView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PolygonView.m; sourceTree = "<group>"; };
+		71FBF2991DE295F500C75E17 /* geom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = geom.cpp; sourceTree = "<group>"; };
+		71FBF29A1DE295F500C75E17 /* geom.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = geom.h; sourceTree = "<group>"; };
+		71FBF29B1DE295F500C75E17 /* rayclipper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rayclipper.h; sourceTree = "<group>"; };
+		71FBF29C1DE295F500C75E17 /* rayclipper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = rayclipper.cpp; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		71FBF26E1DE2931A00C75E17 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		71FBF2841DE2931A00C75E17 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		71FBF2681DE2931A00C75E17 = {
+			isa = PBXGroup;
+			children = (
+				71FBF2731DE2931A00C75E17 /* RayClipperUI */,
+				71FBF28A1DE2931A00C75E17 /* RayClipperUIUITests */,
+				71FBF2721DE2931A00C75E17 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		71FBF2721DE2931A00C75E17 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				71FBF2711DE2931A00C75E17 /* RayClipperUI.app */,
+				71FBF2871DE2931A00C75E17 /* RayClipperUIUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		71FBF2731DE2931A00C75E17 /* RayClipperUI */ = {
+			isa = PBXGroup;
+			children = (
+				71FBF2741DE2931A00C75E17 /* AppDelegate.h */,
+				71FBF2751DE2931A00C75E17 /* AppDelegate.m */,
+				71FBF27A1DE2931A00C75E17 /* ViewController.h */,
+				71FBF27B1DE2931A00C75E17 /* ViewController.m */,
+				71FBF27D1DE2931A00C75E17 /* Assets.xcassets */,
+				71FBF27F1DE2931A00C75E17 /* Main.storyboard */,
+				71FBF2821DE2931A00C75E17 /* Info.plist */,
+				71FBF2771DE2931A00C75E17 /* Supporting Files */,
+				71FBF2961DE2936B00C75E17 /* PolygonView.h */,
+				71FBF2971DE2936B00C75E17 /* PolygonView.m */,
+				71FBF2991DE295F500C75E17 /* geom.cpp */,
+				71FBF29A1DE295F500C75E17 /* geom.h */,
+				71FBF29B1DE295F500C75E17 /* rayclipper.h */,
+				71FBF29C1DE295F500C75E17 /* rayclipper.cpp */,
+				712AA12B1DE3B89600D9616E /* ClipperWrapper.mm */,
+				712AA12C1DE3B89600D9616E /* ClipperWrapper.h */,
+			);
+			path = RayClipperUI;
+			sourceTree = "<group>";
+		};
+		71FBF2771DE2931A00C75E17 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				71FBF2781DE2931A00C75E17 /* main.m */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		71FBF28A1DE2931A00C75E17 /* RayClipperUIUITests */ = {
+			isa = PBXGroup;
+			children = (
+				71FBF28B1DE2931A00C75E17 /* RayClipperUIUITests.m */,
+				71FBF28D1DE2931A00C75E17 /* Info.plist */,
+			);
+			path = RayClipperUIUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		71FBF2701DE2931A00C75E17 /* RayClipperUI */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 71FBF2901DE2931A00C75E17 /* Build configuration list for PBXNativeTarget "RayClipperUI" */;
+			buildPhases = (
+				71FBF26D1DE2931A00C75E17 /* Sources */,
+				71FBF26E1DE2931A00C75E17 /* Frameworks */,
+				71FBF26F1DE2931A00C75E17 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = RayClipperUI;
+			productName = RayClipperUI;
+			productReference = 71FBF2711DE2931A00C75E17 /* RayClipperUI.app */;
+			productType = "com.apple.product-type.application";
+		};
+		71FBF2861DE2931A00C75E17 /* RayClipperUIUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 71FBF2931DE2931A00C75E17 /* Build configuration list for PBXNativeTarget "RayClipperUIUITests" */;
+			buildPhases = (
+				71FBF2831DE2931A00C75E17 /* Sources */,
+				71FBF2841DE2931A00C75E17 /* Frameworks */,
+				71FBF2851DE2931A00C75E17 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				71FBF2891DE2931A00C75E17 /* PBXTargetDependency */,
+			);
+			name = RayClipperUIUITests;
+			productName = RayClipperUIUITests;
+			productReference = 71FBF2871DE2931A00C75E17 /* RayClipperUIUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		71FBF2691DE2931A00C75E17 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0810;
+				ORGANIZATIONNAME = "Atomic Rabbit Ltd.";
+				TargetAttributes = {
+					71FBF2701DE2931A00C75E17 = {
+						CreatedOnToolsVersion = 8.1;
+						ProvisioningStyle = Automatic;
+					};
+					71FBF2861DE2931A00C75E17 = {
+						CreatedOnToolsVersion = 8.1;
+						ProvisioningStyle = Automatic;
+						TestTargetID = 71FBF2701DE2931A00C75E17;
+					};
+				};
+			};
+			buildConfigurationList = 71FBF26C1DE2931A00C75E17 /* Build configuration list for PBXProject "RayClipperUI" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 71FBF2681DE2931A00C75E17;
+			productRefGroup = 71FBF2721DE2931A00C75E17 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				71FBF2701DE2931A00C75E17 /* RayClipperUI */,
+				71FBF2861DE2931A00C75E17 /* RayClipperUIUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		71FBF26F1DE2931A00C75E17 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				71FBF27E1DE2931A00C75E17 /* Assets.xcassets in Resources */,
+				71FBF2811DE2931A00C75E17 /* Main.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		71FBF2851DE2931A00C75E17 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		71FBF26D1DE2931A00C75E17 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				71FBF27C1DE2931A00C75E17 /* ViewController.m in Sources */,
+				71FBF2791DE2931A00C75E17 /* main.m in Sources */,
+				71FBF2761DE2931A00C75E17 /* AppDelegate.m in Sources */,
+				712AA12D1DE3B89600D9616E /* ClipperWrapper.mm in Sources */,
+				71FBF29D1DE295F500C75E17 /* geom.cpp in Sources */,
+				712AA12E1DE3C02D00D9616E /* rayclipper.cpp in Sources */,
+				71FBF2981DE2936B00C75E17 /* PolygonView.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		71FBF2831DE2931A00C75E17 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				71FBF28C1DE2931A00C75E17 /* RayClipperUIUITests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		71FBF2891DE2931A00C75E17 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 71FBF2701DE2931A00C75E17 /* RayClipperUI */;
+			targetProxy = 71FBF2881DE2931A00C75E17 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		71FBF27F1DE2931A00C75E17 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				71FBF2801DE2931A00C75E17 /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		71FBF28E1DE2931A00C75E17 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVES = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		71FBF28F1DE2931A00C75E17 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVES = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		71FBF2911DE2931A00C75E17 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = RayClipperUI/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = it.atomicrabb.RayClipperUI;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		71FBF2921DE2931A00C75E17 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = RayClipperUI/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = it.atomicrabb.RayClipperUI;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		71FBF2941DE2931A00C75E17 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = RayClipperUIUITests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = it.atomicrabb.RayClipperUIUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_TARGET_NAME = RayClipperUI;
+			};
+			name = Debug;
+		};
+		71FBF2951DE2931A00C75E17 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = RayClipperUIUITests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = it.atomicrabb.RayClipperUIUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_TARGET_NAME = RayClipperUI;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		71FBF26C1DE2931A00C75E17 /* Build configuration list for PBXProject "RayClipperUI" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				71FBF28E1DE2931A00C75E17 /* Debug */,
+				71FBF28F1DE2931A00C75E17 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		71FBF2901DE2931A00C75E17 /* Build configuration list for PBXNativeTarget "RayClipperUI" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				71FBF2911DE2931A00C75E17 /* Debug */,
+				71FBF2921DE2931A00C75E17 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		71FBF2931DE2931A00C75E17 /* Build configuration list for PBXNativeTarget "RayClipperUIUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				71FBF2941DE2931A00C75E17 /* Debug */,
+				71FBF2951DE2931A00C75E17 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 71FBF2691DE2931A00C75E17 /* Project object */;
+}
