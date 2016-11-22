@@ -12,13 +12,17 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+    
+@protocol PolygonViewDelegate
+-(void)mouseMovedTo:(NSPoint)position;
+@end
 
 @interface PolygonView : NSView
 
 @property (nonatomic, assign) struct rect clipRect;
 @property (nonatomic, strong) NSArray *polygons;
 @property (nonatomic, assign) CGFloat scale;
-
+@property (nonatomic, weak) id<PolygonViewDelegate> delegate;
 -(void)drawString:(NSString *)str atPosition:(CGPoint)position;
 
 @end

@@ -7,8 +7,9 @@
 //
 
 #import <Cocoa/Cocoa.h>
+#import "PolygonView.h"
 
-@interface ViewController : NSViewController
+@interface ViewController : NSViewController <PolygonViewDelegate>
 
 
 @end
