@@ -327,6 +327,17 @@ geom_poly_intersection(struct coord *p1, struct coord *p2, const struct rect *r,
 	}
 }
 
+int
+geom_point_is_completely_within_rect(struct coord coord, const struct rect *r)
+{
+    if ( coord.x <= r->l.x ) return 0;
+    if ( coord.x >= r->h.x ) return 0;
+    if ( coord.y <= r->l.y ) return 0;
+    if ( coord.y >= r->h.y ) return 0;
+    
+    return 1;
+}
+
 
 int
 geom_point_is_inside_rect(struct coord coord, const struct rect *r)

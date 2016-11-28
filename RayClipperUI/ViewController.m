@@ -9,6 +9,7 @@
 #import "ViewController.h"
 #import "PolygonView.h"
 #import "ClipperWrapper.h"
+#include <stdio.h>
 
 @implementation ViewController
 {
@@ -17,6 +18,8 @@
     ClipperWrapper *wrapper;
     FILE *polydebug;
     IBOutlet NSTextField *mousePositionLabel;
+    IBOutlet NSTextField *inputSelfIntersectsLabel;
+    IBOutlet NSTextField *outputSelfIntersectsLabel;
 }
 
 - (void)viewDidLoad {
@@ -43,6 +46,9 @@
     }
     
     BOOL outputWasLarge = NO;
+    BOOL outputIntersects = NO;
+    BOOL inputSelfIntersects = NO;
+    
     do
     {
         if ( ! [wrapper loadInput] )
@@ -52,12 +58,22 @@
             [alert runModal];
             return;
         }
+
+        inputSelfIntersects = [wrapper inputSelfIntersects];
+        if ( inputSelfIntersects )
+        {
+            continue;
+        }
         
         [wrapper runClipper];
-        outputWasLarge = [wrapper outputWasLarge];
+        outputIntersects = [wrapper outputSelfIntersects];
         
-    } while ( ! outputWasLarge );
-    
+    } while ( ! outputIntersects );
+
+    outputWasLarge = [wrapper outputWasLarge];
+    inputSelfIntersectsLabel.hidden = ![wrapper inputSelfIntersects];
+    outputSelfIntersectsLabel.hidden = ![wrapper outputSelfIntersects];
+
     NSArray *inputP = [wrapper getInputPolygons];
     NSArray *outputP = [wrapper getOutputPolygons];
 
@@ -72,9 +88,9 @@
 {
     if ( wrapper == nil )
     {
-        //wrapper = [[ClipperWrapper alloc] initWithPath:@"/Users/ray/projects/atomicrabbit/maptools/maptool/workingdir_amsterdam/PolyDebug.bin"];
+        wrapper = [[ClipperWrapper alloc] initWithPath:@"/Users/ray/projects/atomicrabbit/maptools/maptool/workingdir_amsterdam/PolyDebug.bin"];
         //wrapper = [[ClipperWrapper alloc] initWithPath:@"/Users/ray/temp/FailedPolygons/PolyDebug.bin"];
-        wrapper = [[ClipperWrapper alloc] initWithPath:@"/Users/ray/temp/FailedPolygons/PolyDebug3.bin"];
+        //wrapper = [[ClipperWrapper alloc] initWithPath:@"/Users/ray/temp/FailedPolygons/PolyDebug4.bin"];
         //wrapper = [[ClipperWrapper alloc] init];
     }
     
@@ -87,7 +103,24 @@
     }
     
     NSArray *inputP = [wrapper getInputPolygons];
+    inputSelfIntersectsLabel.hidden = ![wrapper inputSelfIntersects];
     [wrapper runClipper];
+    outputSelfIntersectsLabel.hidden = ![wrapper outputSelfIntersects];
+    NSArray *outputP = [wrapper getOutputPolygons];
+    
+    _inputView.polygons = inputP;
+    _inputView.clipRect = wrapper.cliprect;
+    _outputView.polygons = outputP;
+    _outputView.clipRect = wrapper.cliprect;
+}
+
+
+- (IBAction)repestPressed:(NSButton *)sender
+{
+    NSArray *inputP = [wrapper getInputPolygons];
+    inputSelfIntersectsLabel.hidden = ![wrapper inputSelfIntersects];
+    [wrapper runClipper];
+    outputSelfIntersectsLabel.hidden = ![wrapper outputSelfIntersects];
     NSArray *outputP = [wrapper getOutputPolygons];
     
     _inputView.polygons = inputP;

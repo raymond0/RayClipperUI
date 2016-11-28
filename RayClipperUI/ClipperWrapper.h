@@ -22,6 +22,8 @@
 -(NSArray *)getOutputPolygons;
 @property (nonatomic, readonly) struct rect cliprect;
 -(struct coord *)rawInputCoords;
+-(bool)inputSelfIntersects;
+-(bool)outputSelfIntersects;
 -(BOOL)outputWasLarge;
 
 @end

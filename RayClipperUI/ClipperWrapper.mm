@@ -8,6 +8,7 @@
 
 #include "ClipperWrapper.h"
 #include "rayclipper.h"
+#include "PolygonChecking.h"
 
 @implementation ClipperWrapper
 {
@@ -74,12 +75,31 @@
         return YES;
     }
     
-    [self test13];
+    [self test14];
     /*NSString *testName = [NSString stringWithFormat:@"test%ld", (long)nextTest];
     nextTest = ( nextTest + 1 ) % 12;
     SEL testSel = NSSelectorFromString(testName);
     [self performSelector:testSel];*/
     return YES;
+}
+
+
+-(bool)inputSelfIntersects
+{
+    return PolygonSelfIntersects( input );
+}
+
+-(bool)outputSelfIntersects
+{
+    for ( auto &outp : output )
+    {
+        if ( PolygonSelfIntersects( outp ) )
+        {
+            return YES;
+        }
+    }
+    
+    return NO;
 }
 
 
@@ -287,5 +307,16 @@ std::vector<T>& operator,(std::vector<T>& v, const T & item)
       << c( 548843, 6846719 );
     input = p;
 }
+    
+    
+-(void)test14
+{
+    _cliprect = { {0,0}, {100,100}};
+    
+    rayclipper::Polygon p;
+    p << c( 50, -20 ) << c( 50, 50 ) << c( 50, 50 ) << c( 48, -20 );
+    input = p;
+}
+
 
 @end

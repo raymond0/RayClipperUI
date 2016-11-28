@@ -9,6 +9,17 @@
 #include "rayclipper.h"
 #include <assert.h>
 
+#ifdef ENABLE_SELF_INTERSECTION_FUNCTION
+
+#include <CGAL/Cartesian.h>
+#include <CGAL/MP_Float.h>
+#include <CGAL/Quotient.h>
+#include <CGAL/Arr_segment_traits_2.h>
+#include <CGAL/Sweep_line_2_algorithms.h>
+#include <list>
+
+#endif
+
 using namespace std;
 
 namespace rayclipper
@@ -70,7 +81,7 @@ vector<Polygon> GetAllSubPolygons( const Polygon &inputPolygon, struct rect rect
                     currentPolygon->emplace_back( intersection );
                 }
                 
-                assert ( currentPolygon->size() >= 3 );
+                //assert ( currentPolygon->size() >= 3 );
                 allPolygons.emplace_back( *currentPolygon );
                 
                 inside = false;
@@ -285,7 +296,26 @@ void ClosePolygon( Polygon &polygon, vector<Polygon> &otherPolygons, struct rect
         if ( closestPolygonDistance <= distanceToNextCorner )
         {
             auto &other = otherPolygons[closestPolygon];
-            polygon.insert( polygon.end(), other.begin(), other.end() );
+            
+            size_t toSkipAtStart = 0;
+            size_t toSkipAtEnd = 0;
+            
+            if ( coord_is_equal( polygon.back(), other.front() ) )
+            {
+                toSkipAtStart = 1;
+            }
+            
+            if ( coord_is_equal( other.back(), polygon.front() ) )
+            {
+                toSkipAtEnd = 1;
+            }
+            
+            assert( other.begin() + toSkipAtStart <= other.end() - toSkipAtEnd );
+
+            polygon.insert( polygon.end(), other.begin() + toSkipAtStart, other.end() - toSkipAtEnd );
+            
+            assert ( !coord_is_equal(polygon.front(), polygon.back()) );
+            
             otherPolygons.erase( otherPolygons.begin() + closestPolygon );
             
             continue;
@@ -306,10 +336,124 @@ vector<Polygon> ClosePolygons( vector<Polygon> &polygons, struct rect rect )
         auto polygon = polygons.back();
         polygons.pop_back();
         ClosePolygon(polygon, polygons, rect);
+        
+        while ( polygon.size() > 1 && coord_is_equal(polygon.front(), polygon.back() ) )
+        {
+            //
+            //  Could be out -> in -> out on the same intersection
+            //
+            polygon.pop_back();
+        }
+        
+        if ( polygon.size() < 3 )
+        {
+            //
+            // We need polygons so actually be polygon's completed by this stage
+            //
+            continue;
+        }
+        
         closedPolygons.emplace_back( polygon );
     }
     
     return closedPolygons;
+}
+    
+    
+bool PointIsOnEdge( const struct coord &coord, const struct rect &rect )
+{
+    return coord.x == rect.l.x || coord.x == rect.h.x ||
+           coord.y == rect.l.y || coord.y == rect.h.y;
+}
+    
+    
+vector<Polygon> SplitEdgeTouchingPolygons( vector<Polygon> &polygons, struct rect rect )
+{
+    vector<Polygon> output;
+    for ( auto &polygon : polygons )
+    {
+        assert( PointIsOnEdge ( polygon.front(), rect ) );
+        assert( PointIsOnEdge ( polygon.back(), rect ) );
+        
+        shared_ptr<Polygon> currentPolygon;
+        bool inPolygon = false;
+        bool anyPointInside = false;
+ 
+        for ( size_t i = 1; i < polygon.size(); i++ )
+        {
+            coord first = polygon[ i - 1 ];
+            coord second = polygon[ i ];
+            
+            if ( geom_point_is_completely_within_rect( first, &rect ) ||
+                 geom_point_is_completely_within_rect( second, &rect ) )
+            {
+                if ( ! inPolygon )
+                {
+                    anyPointInside = true;
+                    inPolygon = true;
+                    currentPolygon = shared_ptr<Polygon>(new Polygon());
+                    currentPolygon->emplace_back(first);
+                }
+                currentPolygon->emplace_back(second);
+            }
+            else
+            {
+                bool clockwiseOnEdge = false;
+                
+                EdgeType firstEdge = EdgeForCoord( first, rect );
+                EdgeType secondEdge = EdgeForCoord( second, rect );
+                if ( PointIsOnEdge( first, rect ) && PointIsOnEdge( second, rect ) )
+                {
+                    int firstToSecond = ClockwiseDistance(first, second, rect);
+                    int secondToFirst = ClockwiseDistance(second, first, rect);
+                    clockwiseOnEdge = firstToSecond < secondToFirst;
+                }
+
+                if ( firstEdge != secondEdge || clockwiseOnEdge )
+                {
+                    if ( ! inPolygon )
+                    {
+                        anyPointInside = true;
+                        inPolygon = true;
+                        currentPolygon = shared_ptr<Polygon>(new Polygon());
+                        currentPolygon->emplace_back(first);
+                    }
+                    currentPolygon->emplace_back(second);
+                }
+                else
+                {
+                    if ( inPolygon )
+                    {
+                        inPolygon = false;
+                        currentPolygon->emplace_back( second );
+                        output.emplace_back( *currentPolygon );
+                    }
+                }
+            }
+        }
+        
+        if ( inPolygon )
+        {
+            inPolygon = false;
+            output.emplace_back( *currentPolygon );
+        }
+        
+        if ( ! anyPointInside )
+        {
+            //
+            // All points lie on the boundary - could be intersection or clockwise
+            //
+            output.emplace_back( polygon );
+        }
+        
+        assert ( !inPolygon );
+        /*if ( inPolygon )
+        {
+            output.emplace_back( *currentPolygon );
+        }*/
+    }
+    
+    return output;
 }
 
 
@@ -414,10 +558,42 @@ vector<Polygon> RayClipPolygon( const Polygon &inputPolygon, struct rect rect )
         lastPointOutside = inputSize - 1;
     }
     
+    //auto area = geom_poly_area(&inputPolygon[0], inputPolygon.size());
+    
     vector<Polygon> allPolygons = GetAllSubPolygons(inputPolygon, rect, lastPointOutside );
+    //vector<Polygon> splitPolygons = SplitEdgeTouchingPolygons( allPolygons, rect );
     vector<Polygon> closedPolygons = ClosePolygons(allPolygons, rect);
-    assert ( closedPolygons.size() > 0 );
+    //assert ( closedPolygons.size() > 0 );
     return closedPolygons;
 }
+    
+#ifdef ENABLE_SELF_INTERSECTION_FUNCTION
+    
+typedef CGAL::Quotient<CGAL::MP_Float>                  NT;
+typedef CGAL::Cartesian<NT>                             Kernel;
+typedef Kernel::Point_2                                 Point_2;
+typedef CGAL::Arr_segment_traits_2<Kernel>              Traits_2;
+typedef Traits_2::Curve_2                               Segment_2;
+
+
+bool PolygonSelfIntersects(const rayclipper::Polygon &polygon)
+{
+    std::vector<Segment_2> segments;
+    for ( size_t i = 0; i < polygon.size(); i++ )
+    {
+        struct coord a = polygon[i];
+        struct coord b = polygon[ (i + 1) % polygon.size() ];
+        
+        segments.emplace_back(Segment_2 (Point_2(a.x, a.y) ,Point_2(b.x, b.y)));
+    }
+
+    std::list<Point_2>     pts;
+    CGAL::compute_intersection_points (segments.begin(), segments.end(),
+                                       std::back_inserter (pts));
+    
+    return pts.size() > 0;
+}
+    
+#endif // ENABLE_SELF_INTERSECTION_FUNCTION
 
 }

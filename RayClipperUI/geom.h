@@ -61,6 +61,7 @@ int geom_clip_line_code(struct coord *p1, struct coord *p2, struct rect *r);
 int geom_is_inside(struct coord *p, struct rect *r, int edge);
 void geom_poly_intersection(struct coord *p1, struct coord *p2, const struct rect *r, int edge, struct coord *ret);
 int geom_rect_intersects_or_contains_any_point(struct coord *coords, int count, const struct rect *r);
+int geom_point_is_completely_within_rect(struct coord coord, const struct rect *r);
 int geom_point_is_inside_rect(struct coord coord, const struct rect *r);
 int geom_line_intersets_rect(struct coord *p1, struct coord *p2, const struct rect *r);
 int geom_intersections_of_rect( struct coord *p1, struct coord *p2, const struct rect *r, struct coord *intersections );
