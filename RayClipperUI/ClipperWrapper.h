@@ -10,7 +10,6 @@
 #define ClipperWrapper_hpp
 
 #import <Cocoa/Cocoa.h>
-#import "geom.h"
 
 @interface ClipperWrapper : NSObject
 
@@ -20,11 +19,12 @@
 -(void)runClipper;
 -(NSArray *)getInputPolygons;
 -(NSArray *)getOutputPolygons;
-@property (nonatomic, readonly) struct rect cliprect;
--(struct coord *)rawInputCoords;
+//-(NSArray *)rawInputCoords;
 -(bool)inputSelfIntersects;
 -(bool)outputSelfIntersects;
 -(BOOL)outputWasLarge;
+-(CGRect)clipRectAsCGRect;
+-(NSData *)binaryData;
 
 @end
 

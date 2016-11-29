@@ -19,7 +19,7 @@
 -(void)awakeFromNib
 {
     _scale = 0.8;
-    struct rect clipRect = { {0, 0}, {100, 100} };
+    CGRect clipRect = { {0, 0}, {100, 100} };
     _clipRect = clipRect;
     
     NSTrackingAreaOptions options = (NSTrackingActiveAlways | NSTrackingInVisibleRect |
@@ -40,7 +40,7 @@
 }
 
 
--(void)setClipRect:(struct rect)clipRect
+-(void)setClipRect:(CGRect)clipRect
 {
     _clipRect = clipRect;
     [self setNeedsDisplay:YES];
@@ -71,15 +71,12 @@
     CGRect insetBounds = NSRectToCGRect(nsInsetBounds);
     insetBounds = CGRectApplyAffineTransform(insetBounds, CGAffineTransformMakeScale(_scale, _scale));
 
-    CGFloat clipWidth = _clipRect.h.x - _clipRect.l.x;
-    CGFloat clipHeight = _clipRect.h.y - _clipRect.l.y;
-
-    CGFloat widthRatio =  insetBounds.size.width / clipWidth;
-    CGFloat heightRatio = insetBounds.size.height / clipHeight;
+    CGFloat widthRatio =  insetBounds.size.width / _clipRect.size.width;
+    CGFloat heightRatio = insetBounds.size.height / _clipRect.size.height;
     
     _renderRatio = MIN( widthRatio, heightRatio );
-    CGFloat renderWidth = clipWidth * _renderRatio;
-    CGFloat renderHeight = clipHeight * _renderRatio;
+    CGFloat renderWidth = _clipRect.size.width * _renderRatio;
+    CGFloat renderHeight = _clipRect.size.height * _renderRatio;
     CGPoint center = CGPointMake( self.bounds.size.width / 2.0, self.bounds.size.height / 2.0 );
     _renderOrigin = CGPointMake( center.x - (renderWidth / 2.0), center.y - ( renderHeight / 2.0) );
     _clipDrawingRect = CGRectMake(_renderOrigin.x, _renderOrigin.y, renderWidth, renderHeight);
@@ -89,8 +86,9 @@
     CGContextSetRGBFillColor(context, 1.0, 0, 0, 0.3);
     CGContextFillRect(context, _clipDrawingRect);
 
-    NSString *originStr = [NSString stringWithFormat:@"(%d, %d)", _clipRect.l.x, _clipRect.l.y];
-    NSString *maxStr = [NSString stringWithFormat:@"(%d, %d)", _clipRect.h.x, _clipRect.h.y];
+    NSString *originStr = [NSString stringWithFormat:@"(%d, %d)", (int) _clipRect.origin.x, (int) _clipRect.origin.y];
+    NSString *maxStr = [NSString stringWithFormat:@"(%d, %d)", (int) (_clipRect.origin.x + _clipRect.size.width),
+                                                               (int) (_clipRect.origin.y + _clipRect.size.height)];
     [self drawString:originStr atPosition:CGPointMake(_clipDrawingRect.origin.x, _clipDrawingRect.origin.y - 10)];
     [self drawString:maxStr atPosition:CGPointMake(_clipDrawingRect.origin.x + _clipDrawingRect.size.width,
                                                    _clipDrawingRect.origin.y + _clipDrawingRect.size.height + 8)];
@@ -102,8 +100,8 @@
         {
             NSValue *value = polygon[i];
             NSPoint point = [value pointValue];
-            CGFloat relativeX = ( ( point.x - _clipRect.l.x ) * _renderRatio ) + _renderOrigin.x;
-            CGFloat relativeY = ( ( point.y - _clipRect.l.y ) * _renderRatio ) + _renderOrigin.y;
+            CGFloat relativeX = ( ( point.x - _clipRect.origin.x ) * _renderRatio ) + _renderOrigin.x;
+            CGFloat relativeY = ( ( point.y - _clipRect.origin.y ) * _renderRatio ) + _renderOrigin.y;
             
             if ( i == 0 )
             {
@@ -128,8 +126,8 @@
 {
     NSPoint eventLocation = [event locationInWindow];
     NSPoint localPoint = [self convertPoint:eventLocation fromView:nil];
-    localPoint.x = ((localPoint.x - _clipDrawingRect.origin.x) / _renderRatio) + _clipRect.l.x;
-    localPoint.y = ((localPoint.y - _clipDrawingRect.origin.y) / _renderRatio) + _clipRect.l.y;
+    localPoint.x = ((localPoint.x - _clipDrawingRect.origin.x) / _renderRatio) + _clipRect.origin.x;
+    localPoint.y = ((localPoint.y - _clipDrawingRect.origin.y) / _renderRatio) + _clipRect.origin.y;
     [_delegate mouseMovedTo:localPoint];
 }
 

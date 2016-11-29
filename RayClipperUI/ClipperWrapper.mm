@@ -10,11 +10,13 @@
 #include "rayclipper.h"
 #include "PolygonChecking.h"
 
+using namespace rayclipper;
+
 @implementation ClipperWrapper
 {
     rayclipper::Polygon input;
     std::vector<rayclipper::Polygon> output;
-    struct rect _cliprect;
+    rayclipper::rect _cliprect;
     NSInteger nextTest;
     FILE *polyFile;
 }
@@ -40,9 +42,43 @@
 }
 
 
--(struct coord *)rawInputCoords
+-(NSData *)binaryData
 {
-    return &input[0];
+    printf("Failed rectangle: (%d, %d) -> (%d, %d)\n", _cliprect.l.x, _cliprect.l.y,
+           _cliprect.h.x, _cliprect.h.y);
+    
+    NSArray *inputAll = [self getInputPolygons];
+    NSAssert (inputAll.count == 1, @"1 at a time please");
+    
+    NSArray *inputOnly = inputAll[0];
+    for ( NSValue *v in inputOnly )
+    {
+        NSPoint point = [v pointValue];
+        printf("%d, %d\n", (int) point.x, (int) point.y);
+    }
+
+    NSMutableData *data = [NSMutableData data];
+    [data appendBytes:&_cliprect length:sizeof(struct rect)];
+    int nrCoords = (int) input.size();
+    [data appendBytes:&nrCoords length:sizeof(int)];
+    struct coord *rawCoordPtr = &input[0];
+    [data appendBytes:rawCoordPtr length:sizeof(struct coord) * nrCoords];
+    
+    return data;
+}
+
+
+long long
+geom_poly_area(const struct coord *c, size_t count)
+{
+    long long area=0;
+    int i,j=0;
+    for (i=0; i<count; i++) {
+        if (++j == count)
+            j=0;
+        area+=(long long)(c[i].x+c[j].x)*(c[i].y-c[j].y);
+    }
+    return area/2;
 }
 
 
@@ -63,6 +99,14 @@
 }
 
 
+
+-(CGRect)clipRectAsCGRect
+{
+    CGRect rect = CGRectMake((double)_cliprect.l.x, _cliprect.l.y, _cliprect.h.x - _cliprect.l.x, _cliprect.h.y - _cliprect.l.y);
+    return rect;
+}
+
+
 -(BOOL)loadInput
 {
     if ( polyFile != NULL )
@@ -75,7 +119,7 @@
         return YES;
     }
     
-    [self test14];
+    [self test15];
     /*NSString *testName = [NSString stringWithFormat:@"test%ld", (long)nextTest];
     nextTest = ( nextTest + 1 ) % 12;
     SEL testSel = NSSelectorFromString(testName);
@@ -315,6 +359,41 @@ std::vector<T>& operator,(std::vector<T>& v, const T & item)
     
     rayclipper::Polygon p;
     p << c( 50, -20 ) << c( 50, 50 ) << c( 50, 50 ) << c( 48, -20 );
+    input = p;
+}
+
+
+-(void)test15
+{
+    _cliprect = { {527741,6860639}, {547287,6880185}};
+    
+    rayclipper::Polygon p;
+    p << c( 527960, 6878433);
+    p << c( 528168, 6878199);
+    p << c( 528158, 6878191);
+    p << c( 527952, 6878428);
+    p << c( 527944, 6878430);
+    p << c( 527929, 6878418);
+    p << c( 527914, 6878420);
+    p << c( 527846, 6878497);
+    p << c( 527838, 6878503);
+    p << c( 527828, 6878503);
+    p << c( 527745, 6878425);
+    p << c( 527737, 6878425);
+    p << c( 527740, 6878433);
+    p << c( 527790, 6878481);
+    p << c( 527738, 6878548);
+    p << c( 527793, 6878487);
+    p << c( 527810, 6878495);
+    p << c( 527836, 6878525);
+    p << c( 527846, 6878524);
+    p << c( 527852, 6878531);
+    p << c( 527851, 6878508);
+    p << c( 527922, 6878427);
+    p << c( 527930, 6878426);
+    p << c( 527938, 6878435);
+    p << c( 527954, 6878436);
+    
     input = p;
 }
 

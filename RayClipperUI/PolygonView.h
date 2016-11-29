@@ -7,7 +7,6 @@
 //
 
 #import <Cocoa/Cocoa.h>
-#import "geom.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,7 +18,7 @@ extern "C" {
 
 @interface PolygonView : NSView
 
-@property (nonatomic, assign) struct rect clipRect;
+@property (nonatomic, assign) CGRect clipRect;
 @property (nonatomic, strong) NSArray *polygons;
 @property (nonatomic, assign) CGFloat scale;
 @property (nonatomic, weak) id<PolygonViewDelegate> delegate;

@@ -15,11 +15,12 @@
 {
     IBOutlet PolygonView *_inputView;
     IBOutlet PolygonView *_outputView;
-    ClipperWrapper *wrapper;
     FILE *polydebug;
     IBOutlet NSTextField *mousePositionLabel;
     IBOutlet NSTextField *inputSelfIntersectsLabel;
     IBOutlet NSTextField *outputSelfIntersectsLabel;
+    ClipperWrapper *wrapper;
+    BOOL _performingLarge;
 }
 
 - (void)viewDidLoad {
@@ -37,8 +38,18 @@
     // Update the view, if already loaded.
 }
 
-
 - (IBAction)largePressed:(NSButton *)sender
+{
+    _performingLarge = ! _performingLarge;
+    
+    if ( _performingLarge )
+    {
+        [self performNextLarge];
+    }
+}
+
+
+-(void)performNextLarge
 {
     if ( wrapper == nil )
     {
@@ -46,8 +57,8 @@
     }
     
     BOOL outputWasLarge = NO;
-    BOOL outputIntersects = NO;
-    BOOL inputSelfIntersects = NO;
+    //BOOL outputIntersects = NO;
+    //BOOL inputSelfIntersects = NO;
     
     do
     {
@@ -59,18 +70,19 @@
             return;
         }
 
-        inputSelfIntersects = [wrapper inputSelfIntersects];
+       /* inputSelfIntersects = [wrapper inputSelfIntersects];
         if ( inputSelfIntersects )
         {
             continue;
-        }
+        }*/
         
         [wrapper runClipper];
-        outputIntersects = [wrapper outputSelfIntersects];
+        //outputIntersects = [wrapper outputSelfIntersects];
+        outputWasLarge = [wrapper outputWasLarge];
         
-    } while ( ! outputIntersects );
+    } while ( ! outputWasLarge );
 
-    outputWasLarge = [wrapper outputWasLarge];
+    //outputWasLarge = [wrapper outputWasLarge];
     inputSelfIntersectsLabel.hidden = ![wrapper inputSelfIntersects];
     outputSelfIntersectsLabel.hidden = ![wrapper outputSelfIntersects];
 
@@ -78,19 +90,42 @@
     NSArray *outputP = [wrapper getOutputPolygons];
 
     _inputView.polygons = inputP;
-    _inputView.clipRect = wrapper.cliprect;
+    _inputView.clipRect = wrapper.clipRectAsCGRect;
     _outputView.polygons = outputP;
-    _outputView.clipRect = wrapper.cliprect;
+    _outputView.clipRect = wrapper.clipRectAsCGRect;
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^
+    {
+        if ( self->_performingLarge )
+        {
+            [self performNextLarge];
+        }
+    });
+    
+    /*dispatch_async( dispatch_get_main_queue(), ^
+    {
+    });*/
 }
 
 
 - (IBAction)goPressed:(NSButton *)sender
 {
+    _performingLarge = ! _performingLarge;
+    
+    if ( _performingLarge )
+    {
+        [self performNext];
+    }
+}
+
+
+-(void)performNext
+{
     if ( wrapper == nil )
     {
         wrapper = [[ClipperWrapper alloc] initWithPath:@"/Users/ray/projects/atomicrabbit/maptools/maptool/workingdir_amsterdam/PolyDebug.bin"];
         //wrapper = [[ClipperWrapper alloc] initWithPath:@"/Users/ray/temp/FailedPolygons/PolyDebug.bin"];
-        //wrapper = [[ClipperWrapper alloc] initWithPath:@"/Users/ray/temp/FailedPolygons/PolyDebug4.bin"];
+        //wrapper = [[ClipperWrapper alloc] initWithPath:@"/Users/ray/temp/FailedPolygons/PolyDebug.bin"];
         //wrapper = [[ClipperWrapper alloc] init];
     }
     
@@ -103,15 +138,24 @@
     }
     
     NSArray *inputP = [wrapper getInputPolygons];
-    inputSelfIntersectsLabel.hidden = ![wrapper inputSelfIntersects];
+    //inputSelfIntersectsLabel.hidden = ![wrapper inputSelfIntersects];
     [wrapper runClipper];
-    outputSelfIntersectsLabel.hidden = ![wrapper outputSelfIntersects];
+    //outputSelfIntersectsLabel.hidden = ![wrapper outputSelfIntersects];
     NSArray *outputP = [wrapper getOutputPolygons];
     
     _inputView.polygons = inputP;
-    _inputView.clipRect = wrapper.cliprect;
+    _inputView.clipRect = wrapper.clipRectAsCGRect;
     _outputView.polygons = outputP;
-    _outputView.clipRect = wrapper.cliprect;
+    _outputView.clipRect = wrapper.clipRectAsCGRect;
+    
+    dispatch_async( dispatch_get_main_queue(), ^
+    //dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^
+    {
+        if ( self->_performingLarge )
+        {
+            [self performNext];
+        }
+    });
 }
 
 
@@ -124,38 +168,25 @@
     NSArray *outputP = [wrapper getOutputPolygons];
     
     _inputView.polygons = inputP;
-    _inputView.clipRect = wrapper.cliprect;
+    _inputView.clipRect = wrapper.clipRectAsCGRect;
     _outputView.polygons = outputP;
-    _outputView.clipRect = wrapper.cliprect;
+    _outputView.clipRect = wrapper.clipRectAsCGRect;
 }
 
 
 - (IBAction)failedPressed:(NSButton *)sender
 {
-    printf("Failed rectangle: (%d, %d) -> (%d, %d)\n", wrapper.cliprect.l.x, wrapper.cliprect.l.y,
-           wrapper.cliprect.h.x, wrapper.cliprect.h.y);
-    
-    NSArray *inputAll = [wrapper getInputPolygons];
-    NSAssert (inputAll.count == 1, @"1 at a time please");
-    
-    NSArray *inputOnly = inputAll[0];
-    for ( NSValue *v in inputOnly )
-    {
-        NSPoint point = [v pointValue];
-        printf("%d, %d\n", (int) point.x, (int) point.y);
-    }
-    
     if ( polydebug == NULL )
     {
         polydebug = fopen("PolyDebug.bin", "wb");
     }
     
-    struct rect cr = wrapper.cliprect;
-    fwrite(&cr, sizeof(struct rect), 1, polydebug);
-    int nrCoords = (int) inputOnly.count;
-    fwrite(&nrCoords, sizeof(int), 1, polydebug);
-    struct coord *rawCoordPtr = [wrapper rawInputCoords];
-    fwrite(rawCoordPtr, sizeof(struct coord), nrCoords, polydebug);
+    NSData *data = [wrapper binaryData];
+    if ( fwrite(data.bytes, 1, data.length, polydebug) != data.length )
+    {
+        printf( "binarydata write failed" );
+    }
+    
     fflush(polydebug);
 }
 

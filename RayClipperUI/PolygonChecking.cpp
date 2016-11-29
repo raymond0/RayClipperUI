@@ -21,6 +21,7 @@ typedef Kernel::Point_2                                 Point_2;
 typedef CGAL::Arr_segment_traits_2<Kernel>              Traits_2;
 typedef Traits_2::Curve_2                               Segment_2;
 
+using namespace rayclipper;
 
 bool PolygonSelfIntersects(const rayclipper::Polygon &polygon)
 {
@@ -38,8 +39,8 @@ bool PolygonSelfIntersects(const rayclipper::Polygon &polygon)
                                        std::back_inserter (pts));
     
     bool intersect = CGAL::do_curves_intersect( segments.begin(), segments.end() );
-    assert ( intersect == pts.size() > 0 );
-    
+    //assert ( intersect == pts.size() > 0 );
+    return intersect;
 
     return pts.size() > 0;
 }

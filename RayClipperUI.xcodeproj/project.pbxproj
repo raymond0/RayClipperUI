@@ -13,8 +13,8 @@
 		719E9FC31DE505EF009EC034 /* libCGAL_Core.12.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 719E9FBF1DE505EF009EC034 /* libCGAL_Core.12.0.0.dylib */; };
 		719E9FC41DE505EF009EC034 /* libCGAL_ImageIO.12.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 719E9FC01DE505EF009EC034 /* libCGAL_ImageIO.12.0.0.dylib */; };
 		719E9FC51DE505EF009EC034 /* libCGAL.12.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 719E9FC11DE505EF009EC034 /* libCGAL.12.0.0.dylib */; };
-		719E9FC81DE5077F009EC034 /* PolygonChecking.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 719E9FC61DE5077F009EC034 /* PolygonChecking.cpp */; };
 		719E9FD61DE7A7D5009EC034 /* Avl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 719E9FD41DE7A7D5009EC034 /* Avl.cpp */; };
+		719E9FD81DECDFA0009EC034 /* PolygonChecking.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 719E9FC61DE5077F009EC034 /* PolygonChecking.cpp */; };
 		71FBF2761DE2931A00C75E17 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 71FBF2751DE2931A00C75E17 /* AppDelegate.m */; };
 		71FBF2791DE2931A00C75E17 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 71FBF2781DE2931A00C75E17 /* main.m */; };
 		71FBF27C1DE2931A00C75E17 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 71FBF27B1DE2931A00C75E17 /* ViewController.m */; };
@@ -266,7 +266,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				719E9FD61DE7A7D5009EC034 /* Avl.cpp in Sources */,
-				719E9FC81DE5077F009EC034 /* PolygonChecking.cpp in Sources */,
+				719E9FD81DECDFA0009EC034 /* PolygonChecking.cpp in Sources */,
 				71FBF27C1DE2931A00C75E17 /* ViewController.m in Sources */,
 				71FBF2791DE2931A00C75E17 /* main.m in Sources */,
 				71FBF2761DE2931A00C75E17 /* AppDelegate.m in Sources */,

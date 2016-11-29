@@ -7,23 +7,248 @@
 //
 
 #include "rayclipper.h"
+#include <math.h>
 #include <assert.h>
 
-#ifdef ENABLE_SELF_INTERSECTION_FUNCTION
+#define coord_is_equal(a,b) ((a).x==(b).x && (a).y==(b).y)
+#define sq(x) ((double)(x)*(x))
 
-#include <CGAL/Cartesian.h>
-#include <CGAL/MP_Float.h>
-#include <CGAL/Quotient.h>
-#include <CGAL/Arr_segment_traits_2.h>
-#include <CGAL/Sweep_line_2_algorithms.h>
-#include <list>
-
-#endif
 
 using namespace std;
 
 namespace rayclipper
 {
+    
+    
+typedef enum
+{
+    EdgeTop = 0,
+    EdgeRight = 1,
+    EdgeBottom = 2,
+    EdgeLeft = 3
+} EdgeType;
+    
+    
+double CoordDistance(const struct coord &from, const struct coord &to)
+{
+    double dx = to.x - from.x;
+    double dy = to.y - from.y;
+    
+    return sqrt( ( dx * dx ) + ( dy * dy ) );
+}
+
+    
+bool PointIsCompletelyWithinRect(const struct coord &coord, const struct rect &r)
+{
+    if ( coord.x <= r.l.x ) return false;
+    if ( coord.x >= r.h.x ) return false;
+    if ( coord.y <= r.l.y ) return false;
+    if ( coord.y >= r.h.y ) return false;
+    
+    return true;
+}
+    
+    
+bool PointIsInsideRect(const struct coord &coord, const struct rect &r)
+{
+    if ( coord.x < r.l.x ) return false;
+    if ( coord.x > r.h.x ) return false;
+    if ( coord.y < r.l.y ) return false;
+    if ( coord.y > r.h.y ) return false;
+    
+    return true;
+}
+
+    
+void LineRectIntersection( const struct coord &p1, const struct coord &p2, const struct rect &r,
+                           const EdgeType edge, struct coord &result)
+{
+    float dx=p2.x-p1.x;
+    float dy=p2.y-p1.y;
+    switch(edge) {
+        case EdgeLeft:
+            result.y=p1.y + ((float)(r.l.x-p1.x)) * dy/dx;
+            result.x=r.l.x;
+            break;
+        case EdgeRight:
+            result.y=p1.y + ((float)(r.h.x-p1.x)) * dy/dx;
+            result.x=r.h.x;
+            break;
+        case EdgeTop:
+            result.x=p1.x + ((float)(r.h.y-p1.y)) * dx/dy;
+            result.y=r.h.y;
+            break;
+        case EdgeBottom:
+            result.x=p1.x + ((float)(r.l.y-p1.y)) * dx/dy;
+            result.y=r.l.y;
+            break;
+    }
+}
+
+    
+struct coord InterestionOfRect( const struct coord &p1, const struct coord &p2, const struct rect &r )
+{
+    assert( PointIsInsideRect(p1, r) != PointIsInsideRect(p2, r) );
+    
+    struct coord ret;
+    
+    bool leftPossible =   ( p1.x < r.l.x && p2.x >= r.l.x ) || ( p2.x < r.l.x && p1.x >= r.l.x );
+    bool rightPossible =  ( p1.x <= r.h.x && p2.x > r.h.x ) || ( p2.x <= r.h.x && p1.x > r.h.x );
+    bool bottomPossible = ( p1.y < r.l.y && p2.y >= r.l.y ) || ( p2.y < r.l.y && p1.y >= r.l.y );
+    bool topPossible =    ( p1.y <= r.h.y && p2.y > r.h.y ) || ( p2.y <= r.h.y && p1.y > r.h.y );
+    
+    // Left + Right
+    if ( p1.x != p2.x )
+    {
+        if ( leftPossible )
+        {
+            LineRectIntersection(p1, p2, r, EdgeLeft, ret);
+            if ( r.l.y <= ret.y && ret.y <= r.h.y ) return ret;
+        }
+        
+        if ( rightPossible )
+        {
+            LineRectIntersection(p1, p2, r, EdgeRight, ret);
+            if ( r.l.y <= ret.y && ret.y <= r.h.y ) return ret;
+        }
+    }
+    
+    // Top + bottom
+    if ( p1.y != p2.y )
+    {
+        if ( topPossible )
+        {
+            LineRectIntersection(p1, p2, r, EdgeTop, ret);
+            if ( r.l.x <= ret.x && ret.x <= r.h.x ) return ret;
+        }
+        
+        if ( bottomPossible )
+        {
+            LineRectIntersection(p1, p2, r, EdgeBottom, ret);
+            if ( r.l.x <= ret.x && ret.x <= r.h.x ) return ret;
+        }
+    }
+    
+    assert( 0 );
+}
+    
+    
+vector<struct coord> AllIntersectionsOfRect( const struct coord &p1, const struct coord &p2, const struct rect &r )
+{
+    bool leftPossible =   ( p1.x < r.l.x && p2.x >= r.l.x ) || ( p2.x < r.l.x && p1.x >= r.l.x );
+    bool rightPossible =  ( p1.x <= r.h.x && p2.x > r.h.x ) || ( p2.x <= r.h.x && p1.x > r.h.x );
+    bool bottomPossible = ( p1.y < r.l.y && p2.y >= r.l.y ) || ( p2.y < r.l.y && p1.y >= r.l.y );
+    bool topPossible =    ( p1.y <= r.h.y && p2.y > r.h.y ) || ( p2.y <= r.h.y && p1.y > r.h.y );
+    
+    vector<struct coord> intersections;
+    struct coord ret;
+    
+    // Left + Right
+    if ( p1.x != p2.x )
+    {
+        if ( leftPossible )
+        {
+            LineRectIntersection(p1, p2, r, EdgeLeft, ret);
+            if ( r.l.y <= ret.y && ret.y <= r.h.y )
+            {
+                intersections.emplace_back( ret );
+            }
+        }
+        
+        if ( rightPossible )
+        {
+            LineRectIntersection(p1, p2, r, EdgeRight, ret);
+            if ( r.l.y <= ret.y && ret.y <= r.h.y )
+            {
+                intersections.emplace_back( ret );
+            }
+        }
+    }
+    
+    // Top + bottom
+    if ( p1.y != p2.y )
+    {
+        if ( topPossible )
+        {
+            LineRectIntersection(p1, p2, r, EdgeTop, ret);
+            if ( r.l.x <= ret.x && ret.x <= r.h.x )
+            {
+                intersections.emplace_back( ret );
+            }
+        }
+        
+        if ( bottomPossible )
+        {
+            LineRectIntersection(p1, p2, r, EdgeBottom, ret);
+            if ( r.l.x <= ret.x && ret.x <= r.h.x )
+            {
+                intersections.emplace_back( ret );
+            }
+        }
+    }
+    
+    assert( intersections.size() <= 2 );
+    
+    return intersections;
+}
+    
+    
+bool LineIntersetsRect(const struct coord &p1, const struct coord &p2, const struct rect r)
+{
+    if ( p1.x < r.l.x && p2.x < r.l.x ) return false;
+    if ( p1.x > r.h.x && p2.x > r.h.x ) return false;
+    if ( p1.y < r.l.y && p2.y < r.l.y ) return false;
+    if ( p1.y > r.h.y && p2.y > r.h.y ) return false;
+    
+    struct coord ret;
+    
+    // Left + right
+    if ( p1.x != p2.x )
+    {
+        LineRectIntersection(p1, p2, r, EdgeLeft, ret);
+        if ( r.l.y <= ret.y && ret.y <= r.h.y ) return true;
+        LineRectIntersection(p1, p2, r, EdgeRight, ret);
+        if ( r.l.y <= ret.y && ret.y <= r.h.y ) return true;
+    }
+    
+    // Top + bottom
+    if ( p1.y != p2.y )
+    {
+        LineRectIntersection(p1, p2, r, EdgeTop, ret);
+        if ( r.l.x <= ret.x && ret.x <= r.h.x ) return true;
+        LineRectIntersection(p1, p2, r, EdgeBottom, ret);
+        if ( r.l.x <= ret.x && ret.x <= r.h.x ) return true;
+    }
+    
+    return false;
+}
+    
+    
+bool PointIsInsidePolygon(const Polygon &coords, const struct coord &point)
+{
+    bool inside = false;
+    
+    for (size_t i = 0; i < coords.size() - 1; i++ )
+    {
+        if ( (coords[i].y > point.y ) != ( coords[i+1].y > point.y ) &&
+            point.x < ( (long long) coords[i+1].x - coords[i].x ) * ( point.y - coords[i].y ) / ( coords[i+1].y - coords[i].y ) + coords[i].x )
+        {
+            inside = ! inside;
+        }
+    }
+    
+    if ( coords.front().x != coords.back().x || coords.front().y != coords.back().y )
+    {
+        if ( (coords.back().y > point.y ) != ( coords.front().y > point.y ) &&
+            point.x < ( (long long) coords.front().x - coords.back().x ) * ( point.y - coords.back().y ) / ( coords.front().y - coords.back().y ) + coords.back().x )
+        {
+            inside = ! inside;
+        }
+    }
+    
+    return inside;
+}
+
 
 vector<Polygon> GetAllSubPolygons( const Polygon &inputPolygon, struct rect rect, size_t lastPointOutside )
 {
@@ -38,7 +263,7 @@ vector<Polygon> GetAllSubPolygons( const Polygon &inputPolygon, struct rect rect
         struct coord firstPoint = inputPolygon[(i + lastPointOutside) % inputSize];
         struct coord secondPoint = inputPolygon[(i + 1 + lastPointOutside) % inputSize];
 
-        if ( geom_point_is_inside_rect(secondPoint, &rect ) )
+        if ( PointIsInsideRect(secondPoint, rect ) )
         {
             if ( inside )
             {
@@ -51,7 +276,7 @@ vector<Polygon> GetAllSubPolygons( const Polygon &inputPolygon, struct rect rect
             {
                 currentPolygon = shared_ptr<Polygon>(new Polygon());
                 inside = true;
-                struct coord intersection = geom_interestion_of_rect(&firstPoint, &secondPoint, &rect);
+                struct coord intersection = InterestionOfRect(firstPoint, secondPoint, rect);
                 
                 assert ( intersection.y == rect.l.y || intersection.y == rect.h.y ||
                          intersection.x == rect.l.x || intersection.x == rect.h.x );
@@ -71,7 +296,7 @@ vector<Polygon> GetAllSubPolygons( const Polygon &inputPolygon, struct rect rect
         {
             if ( inside )
             {
-                struct coord intersection = geom_interestion_of_rect(&firstPoint, &secondPoint, &rect);
+                struct coord intersection = InterestionOfRect(firstPoint, secondPoint, rect);
                 
                 assert ( intersection.y == rect.l.y || intersection.y == rect.h.y ||
                          intersection.x == rect.l.x || intersection.x == rect.h.x );
@@ -91,10 +316,9 @@ vector<Polygon> GetAllSubPolygons( const Polygon &inputPolygon, struct rect rect
                 //
                 // Both outside and currently outside - could be intersection
                 //
-                struct coord intersections[2];
-                int nrIntersections = geom_intersections_of_rect(&firstPoint, &secondPoint, &rect, intersections);
+                vector<struct coord> intersections = AllIntersectionsOfRect(firstPoint, secondPoint, rect);
                 
-                if ( nrIntersections == 2 )
+                if ( intersections.size() == 2 )
                 {
                     currentPolygon = shared_ptr<Polygon>(new Polygon());
                     
@@ -105,8 +329,8 @@ vector<Polygon> GetAllSubPolygons( const Polygon &inputPolygon, struct rect rect
                     
                     assert( ! coord_is_equal(intersections[0], intersections[1]) );
                     
-                    double d0 = coord_distance(firstPoint, intersections[0]);
-                    double d1 = coord_distance(firstPoint, intersections[1]);
+                    double d0 = CoordDistance(firstPoint, intersections[0]);
+                    double d1 = CoordDistance(firstPoint, intersections[1]);
                     
                     if ( d0 <= d1 )
                     {
@@ -130,15 +354,6 @@ vector<Polygon> GetAllSubPolygons( const Polygon &inputPolygon, struct rect rect
     
     return allPolygons;
 }
-
-
-typedef enum
-{
-    EdgeTop = 0,
-    EdgeRight = 1,
-    EdgeBottom = 2,
-    EdgeLeft = 3
-} EdgeType;
 
 
 EdgeType EdgeForCoord( struct coord coord, struct rect rect )
@@ -305,16 +520,16 @@ void ClosePolygon( Polygon &polygon, vector<Polygon> &otherPolygons, struct rect
                 toSkipAtStart = 1;
             }
             
-            if ( coord_is_equal( other.back(), polygon.front() ) )
-            {
-                toSkipAtEnd = 1;
-            }
+            //if ( coord_is_equal( other.back(), polygon.front() ) )
+            //{
+            //    toSkipAtEnd = 1;
+            //}
             
             assert( other.begin() + toSkipAtStart <= other.end() - toSkipAtEnd );
 
             polygon.insert( polygon.end(), other.begin() + toSkipAtStart, other.end() - toSkipAtEnd );
             
-            assert ( !coord_is_equal(polygon.front(), polygon.back()) );
+            //assert ( !coord_is_equal(polygon.front(), polygon.back()) );
             
             otherPolygons.erase( otherPolygons.begin() + closestPolygon );
             
@@ -384,8 +599,8 @@ vector<Polygon> SplitEdgeTouchingPolygons( vector<Polygon> &polygons, struct rec
             coord first = polygon[ i - 1 ];
             coord second = polygon[ i ];
             
-            if ( geom_point_is_completely_within_rect( first, &rect ) ||
-                 geom_point_is_completely_within_rect( second, &rect ) )
+            if ( PointIsCompletelyWithinRect( first, rect ) ||
+                 PointIsCompletelyWithinRect( second, rect ) )
             {
                 if ( ! inPolygon )
                 {
@@ -475,7 +690,7 @@ vector<Polygon> RayClipPolygon( const Polygon &inputPolygon, struct rect rect )
     for ( size_t i = 0; i < inputPolygon.size(); i++ )
     {
         struct coord c = inputPolygon[i];
-        if ( ! geom_point_is_inside_rect(c, &rect ) )
+        if ( ! PointIsInsideRect(c, rect ) )
         {
             if ( firstPointOutside == -1 )
             {
@@ -516,8 +731,8 @@ vector<Polygon> RayClipPolygon( const Polygon &inputPolygon, struct rect rect )
         struct coord outsidePoint = inputPolygon[outsidePointIndex];
         struct coord insidePoint = inputPolygon[insidePointIndex];
         
-        if ( geom_point_is_inside_rect(insidePoint, &rect )  ||
-             geom_line_intersets_rect(&outsidePoint, &insidePoint, &rect) )
+        if ( PointIsInsideRect(insidePoint, rect )  ||
+             LineIntersetsRect(outsidePoint, insidePoint, rect) )
         {
             firstPointBackInside = insidePointIndex;
             break;
@@ -530,7 +745,7 @@ vector<Polygon> RayClipPolygon( const Polygon &inputPolygon, struct rect rect )
         //  No intersections or points inside. Either completely surrounded and included, or completely surrounded with no overlap
         //
         struct coord rectCenter = { ( rect.l.x + rect.h.x ) / 2, ( rect.l.y + rect.h.y ) / 2 };
-        if ( ! geom_poly_point_inside( &inputPolygon[0], (int) inputPolygon.size(), &rectCenter) )
+        if ( ! PointIsInsidePolygon( inputPolygon, rectCenter ) )
         {
             //
             // We are not covered
@@ -566,34 +781,5 @@ vector<Polygon> RayClipPolygon( const Polygon &inputPolygon, struct rect rect )
     //assert ( closedPolygons.size() > 0 );
     return closedPolygons;
 }
-    
-#ifdef ENABLE_SELF_INTERSECTION_FUNCTION
-    
-typedef CGAL::Quotient<CGAL::MP_Float>                  NT;
-typedef CGAL::Cartesian<NT>                             Kernel;
-typedef Kernel::Point_2                                 Point_2;
-typedef CGAL::Arr_segment_traits_2<Kernel>              Traits_2;
-typedef Traits_2::Curve_2                               Segment_2;
-
-
-bool PolygonSelfIntersects(const rayclipper::Polygon &polygon)
-{
-    std::vector<Segment_2> segments;
-    for ( size_t i = 0; i < polygon.size(); i++ )
-    {
-        struct coord a = polygon[i];
-        struct coord b = polygon[ (i + 1) % polygon.size() ];
-        
-        segments.emplace_back(Segment_2 (Point_2(a.x, a.y) ,Point_2(b.x, b.y)));
-    }
-
-    std::list<Point_2>     pts;
-    CGAL::compute_intersection_points (segments.begin(), segments.end(),
-                                       std::back_inserter (pts));
-    
-    return pts.size() > 0;
-}
-    
-#endif // ENABLE_SELF_INTERSECTION_FUNCTION
 
 }
