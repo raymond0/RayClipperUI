@@ -129,7 +129,9 @@ struct coord InterestionOfRect( const struct coord &p1, const struct coord &p2, 
         }
     }
     
-    assert( 0 );
+    assert( false );
+    struct coord failed;
+    return failed;  // Some compiler configs shout error otherwise
 }
     
     
@@ -387,6 +389,7 @@ EdgeType EdgeForCoord( struct coord coord, struct rect rect )
     if ( coord.x == rect.l.x ) return EdgeLeft;
     
     assert ( false );
+    return EdgeLeft;    // Some compiler configs shout error otherwise
 }
 
 
@@ -593,7 +596,7 @@ vector<Polygon> SplitEdgeTouchingPolygons( vector<Polygon> &polygons, struct rec
         shared_ptr<Polygon> currentPolygon;
         bool inPolygon = false;
         bool anyPointInside = false;
- 
+
         for ( size_t i = 1; i < polygon.size(); i++ )
         {
             coord first = polygon[ i - 1 ];
@@ -663,9 +666,9 @@ vector<Polygon> SplitEdgeTouchingPolygons( vector<Polygon> &polygons, struct rec
         
         assert ( !inPolygon );
         /*if ( inPolygon )
-        {
-            output.emplace_back( *currentPolygon );
-        }*/
+         {
+         output.emplace_back( *currentPolygon );
+         }*/
     }
     
     return output;
@@ -681,7 +684,7 @@ vector<Polygon> RayClipPolygon( const Polygon &inputPolygon, struct rect rect )
         return output;
     }
     
-    size_t firstPointOutside = -1;
+    size_t firstPointOutside = SIZE_MAX;
     bool allPointsAbove = true;
     bool allPointsRight = true;
     bool allPointsBelow = true;
@@ -692,7 +695,7 @@ vector<Polygon> RayClipPolygon( const Polygon &inputPolygon, struct rect rect )
         struct coord c = inputPolygon[i];
         if ( ! PointIsInsideRect(c, rect ) )
         {
-            if ( firstPointOutside == -1 )
+            if ( firstPointOutside == SIZE_MAX )
             {
                 firstPointOutside = i;
             }
@@ -707,7 +710,7 @@ vector<Polygon> RayClipPolygon( const Polygon &inputPolygon, struct rect rect )
     //
     //  Simple cases - all inside, or no possible overlap
     //
-    if ( firstPointOutside == -1 )
+    if ( firstPointOutside == SIZE_MAX )
     {
         output.emplace_back(inputPolygon);
         return output;
@@ -739,7 +742,7 @@ vector<Polygon> RayClipPolygon( const Polygon &inputPolygon, struct rect rect )
         }
     }
     
-    if ( firstPointBackInside == - 1 )
+    if ( firstPointBackInside == SIZE_MAX )
     {
         //
         //  No intersections or points inside. Either completely surrounded and included, or completely surrounded with no overlap
@@ -765,10 +768,10 @@ vector<Polygon> RayClipPolygon( const Polygon &inputPolygon, struct rect rect )
         return output;
     }
     
-    assert ( firstPointBackInside != -1);
+    assert ( firstPointBackInside != SIZE_MAX );
     
     size_t lastPointOutside = firstPointBackInside -1;
-    if ( lastPointOutside == -1 )
+    if ( lastPointOutside == SIZE_MAX )
     {
         lastPointOutside = inputSize - 1;
     }
@@ -780,6 +783,12 @@ vector<Polygon> RayClipPolygon( const Polygon &inputPolygon, struct rect rect )
     vector<Polygon> closedPolygons = ClosePolygons(allPolygons, rect);
     //assert ( closedPolygons.size() > 0 );
     return closedPolygons;
+}
+    
+    
+void CleanPolygon( const Polygon &inputPolygon, Polygon &outputPolygon )
+{
+    
 }
 
 }
