@@ -867,5 +867,20 @@ void CleanPolygon( const Polygon &inputPolygon, Polygon &outputPolygon )
     
     outputPolygon.emplace_back( inputPolygon.back() );
 }
+    
+    
+long long PolygonArea(const Polygon &coords)
+{
+    long long area=0;
+    int i,j=0;
+    
+    for (i = 0; i < coords.size(); i++)
+    {
+        if (++j == coords.size())
+            j = 0;
+        area += ( long long )(coords[i].x + coords[j].x ) * (coords[i].y - coords[j].y);
+    }
+    return area / 2;
+}
 
 }
