@@ -23,7 +23,8 @@ struct rect {struct coord l,h;};
 typedef std::vector<struct coord> Polygon;
 
 std::vector<Polygon> RayClipPolygon( const Polygon &inputPolygon, struct rect rect );
-
+void CleanPolygon( const Polygon &inputPolygon, Polygon &outputPolygon );
+long long PolygonArea(const Polygon &coords);
 }
 
 
