@@ -14,13 +14,18 @@
     
 namespace rayclipper {
     
-struct coord {
+typedef struct coord {
     int x;
     int y;
-};
+} coord;
 
 struct rect {struct coord l,h;};
-typedef std::vector<struct coord> Polygon;
+    
+class Polygon : public std::vector<struct coord>
+{
+public:
+    std::vector<Polygon> holes;
+};
 
 std::vector<Polygon> RayClipPolygon( const Polygon &inputPolygon, struct rect rect );
 void CleanPolygon( const Polygon &inputPolygon, Polygon &outputPolygon );
