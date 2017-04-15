@@ -272,7 +272,7 @@ bool LineIntersetsLine(const struct coord &line1Start, const struct coord &line1
 }
     
     
-bool PointIsInsidePolygon(const Polygon &coords, const struct coord &point)
+bool PointIsInsideContour(const Contour &coords, const struct coord &point)
 {
     bool inside = false;
     
@@ -298,9 +298,8 @@ bool PointIsInsidePolygon(const Polygon &coords, const struct coord &point)
 }
 
 
-vector<Polygon> GetAllSubPolygons( const Polygon &inputPolygon, struct rect rect, size_t lastPointOutside )
+void GetAllSubContours( const Contour &inputPolygon, struct rect rect, size_t lastPointOutside, vector<Contour> &allContours )
 {
-    vector<Polygon> allPolygons;
     bool inside = false;
     shared_ptr<Polygon> currentPolygon;
     
@@ -355,7 +354,7 @@ vector<Polygon> GetAllSubPolygons( const Polygon &inputPolygon, struct rect rect
                 }
                 
                 //assert ( currentPolygon->size() >= 3 );
-                allPolygons.emplace_back( *currentPolygon );
+                allContours.emplace_back( *currentPolygon );
                 
                 inside = false;
             }
@@ -391,7 +390,7 @@ vector<Polygon> GetAllSubPolygons( const Polygon &inputPolygon, struct rect rect
                         currentPolygon->emplace_back(intersections[0]);
                     }
 
-                    allPolygons.emplace_back( *currentPolygon );
+                    allContours.emplace_back( *currentPolygon );
                 }
             }
         }
@@ -399,8 +398,6 @@ vector<Polygon> GetAllSubPolygons( const Polygon &inputPolygon, struct rect rect
     
     assert( ! inside );
     //assert( allPolygons.size() > 0 );
-    
-    return allPolygons;
 }
 
 
@@ -534,16 +531,16 @@ int ClockwiseDistance( struct coord from, struct coord to, struct rect rect )
 }
 
 
-void ClosePolygon( Polygon &polygon, vector<Polygon> &otherPolygons, struct rect rect )
+void ClosePolygon( Polygon &polygon, vector<Contour> &otherContours, struct rect rect )
 {
     while ( true )
     {
         size_t closestPolygon = -1;
         int closestPolygonDistance = INT_MAX;
         
-        for ( size_t i = 0; i < otherPolygons.size(); i++ )
+        for ( size_t i = 0; i < otherContours.size(); i++ )
         {
-            auto &other = otherPolygons[i];
+            auto &other = otherContours[i];
             
             int d = ClockwiseDistance(polygon.back(), other.front(), rect );
             if ( d < closestPolygonDistance )
@@ -559,34 +556,72 @@ void ClosePolygon( Polygon &polygon, vector<Polygon> &otherPolygons, struct rect
 
         if ( distanceToEndOfCurrent <= distanceToNextCorner && distanceToEndOfCurrent <= closestPolygonDistance )
         {
-            //  No corners or other polygons in the way
+            //
+            //  No corners or other polygons in the way. We're done.
+            //
+            
+            //
+            //  Trim adjacent retracing of points at beginning/end of polygon
+            //
+            coord back = polygon.back();
+            coord front = polygon.front();
+            
+            if ( polygon.size() < 4 || ! coord_is_equal(back, front) )
+            {
+                return;
+            }
+
+            coord second = polygon[1];
+            coord penultimate = polygon[ polygon.size() - 2 ];
+            
+            //
+            //  Prevent adjacent retracing at join
+            //
+            if ( penultimate.x == back.x && back.x == second.x )     // All on same x
+            {
+                polygon.pop_back();
+                polygon.erase(polygon.begin());
+            }
+            else if ( penultimate.y == back.y && back.y == second.y )     // All on same x
+            {
+                polygon.pop_back();
+                polygon.erase(polygon.begin());
+            }
+
             return;
         }
         
         if ( closestPolygonDistance <= distanceToNextCorner )
         {
-            auto &other = otherPolygons[closestPolygon];
+            auto &other = otherContours[closestPolygon];
+            coord back = polygon.back();
+            coord newFront = other.front();
             
             size_t toSkipAtStart = 0;
-            size_t toSkipAtEnd = 0;
             
-            if ( coord_is_equal( polygon.back(), other.front() ) )
+            if ( coord_is_equal( back, newFront ) )
             {
                 toSkipAtStart = 1;
+                
+                coord penultimate = polygon[ polygon.size() - 2 ];
+                coord newSecond = other[1];
+                
+                if ( penultimate.x == back.x && back.x == newSecond.x )     // All on same x
+                {
+                    polygon.pop_back();
+                }
+                else if ( penultimate.y == back.y && back.y == newSecond.y )     // All on same x
+                {
+                    polygon.pop_back();
+                }
             }
             
-            //if ( coord_is_equal( other.back(), polygon.front() ) )
-            //{
-            //    toSkipAtEnd = 1;
-            //}
             
-            assert( other.begin() + toSkipAtStart <= other.end() - toSkipAtEnd );
+            assert( other.begin() + toSkipAtStart <= other.end() );
 
-            polygon.insert( polygon.end(), other.begin() + toSkipAtStart, other.end() - toSkipAtEnd );
+            polygon.insert( polygon.end(), other.begin() + toSkipAtStart, other.end() );
             
-            //assert ( !coord_is_equal(polygon.front(), polygon.back()) );
-            
-            otherPolygons.erase( otherPolygons.begin() + closestPolygon );
+            otherContours.erase( otherContours.begin() + closestPolygon );
             
             continue;
         }
@@ -597,15 +632,15 @@ void ClosePolygon( Polygon &polygon, vector<Polygon> &otherPolygons, struct rect
 }
 
 
-vector<Polygon> ClosePolygons( vector<Polygon> &polygons, struct rect rect )
+void ClosePolygons( vector<Contour> &contours, struct rect rect, vector<Polygon> &closedPolygons )
 {
-    vector<Polygon> closedPolygons;
-    
-    while ( polygons.size() > 0 )
+    while ( contours.size() > 0 )
     {
-        auto polygon = polygons.back();
-        polygons.pop_back();
-        ClosePolygon(polygon, polygons, rect);
+        auto contour = contours.back();
+        contours.pop_back();
+        Polygon polygon;
+        polygon.insert( polygon.end(), contour.begin(), contour.end() );
+        ClosePolygon(polygon, contours, rect);
         
         while ( polygon.size() > 1 && coord_is_equal(polygon.front(), polygon.back() ) )
         {
@@ -625,8 +660,6 @@ vector<Polygon> ClosePolygons( vector<Polygon> &polygons, struct rect rect )
         
         closedPolygons.emplace_back( polygon );
     }
-    
-    return closedPolygons;
 }
     
     
@@ -726,14 +759,20 @@ vector<Polygon> SplitEdgeTouchingPolygons( vector<Polygon> &polygons, struct rec
     return output;
 }
 
-    
-vector<Polygon> GetClippedContours( const Polygon &inputPolygon, struct rect rect )
+typedef enum
 {
-    vector<Polygon> output;
-
+    ContourResultNothingInside,
+    ContourResultEntirelyInside,
+    ContourResultCompletelyCovers,
+    ContourResultHaveContours
+} ContourResult;
+    
+    
+ContourResult GetClippedContours( const Contour &inputPolygon, struct rect rect, vector<Contour> &clippedContours )
+{
     if ( inputPolygon.size() < 3 )
     {
-        return output;
+        return ContourResultNothingInside;
     }
     
     size_t firstPointOutside = SIZE_MAX;
@@ -764,15 +803,12 @@ vector<Polygon> GetClippedContours( const Polygon &inputPolygon, struct rect rec
     //
     if ( firstPointOutside == SIZE_MAX )
     {
-        Polygon p;
-        p.insert( p.end(), inputPolygon.begin(), inputPolygon.end() );
-        output.emplace_back(p);
-        return output;
+        return ContourResultEntirelyInside;
     }
     
     if ( allPointsAbove || allPointsLeft || allPointsRight || allPointsBelow )
     {
-        return output;
+        return ContourResultNothingInside;
     }
     
     //
@@ -802,24 +838,18 @@ vector<Polygon> GetClippedContours( const Polygon &inputPolygon, struct rect rec
         //  No intersections or points inside. Either completely surrounded and included, or completely surrounded with no overlap
         //
         struct coord rectCenter = { ( rect.l.x + rect.h.x ) / 2, ( rect.l.y + rect.h.y ) / 2 };
-        if ( ! PointIsInsidePolygon( inputPolygon, rectCenter ) )
+        if ( ! PointIsInsideContour( inputPolygon, rectCenter ) )
         {
             //
             // We are not covered
             //
-            return output;
+            return ContourResultNothingInside;
         }
         
         //
         // We are covered
         //
-        Polygon rectAsPolygon;
-        rectAsPolygon.emplace_back(rect.l);
-        rectAsPolygon.emplace_back(coord{rect.l.x, rect.h.y});
-        rectAsPolygon.emplace_back(rect.h);
-        rectAsPolygon.emplace_back(coord{rect.h.x, rect.l.y});
-        output.emplace_back( rectAsPolygon );
-        return output;
+        return ContourResultCompletelyCovers;
     }
     
     assert ( firstPointBackInside != SIZE_MAX );
@@ -832,11 +862,9 @@ vector<Polygon> GetClippedContours( const Polygon &inputPolygon, struct rect rec
     
     //auto area = geom_poly_area(&inputPolygon[0], inputPolygon.size());
     
-    vector<Polygon> allPolygons = GetAllSubPolygons(inputPolygon, rect, lastPointOutside );
-    //vector<Polygon> splitPolygons = SplitEdgeTouchingPolygons( allPolygons, rect );
-    vector<Polygon> closedPolygons = ClosePolygons(allPolygons, rect);
-    //assert ( closedPolygons.size() > 0 );
-    return closedPolygons;
+    GetAllSubContours(inputPolygon, rect, lastPointOutside, clippedContours );
+    
+    return ContourResultHaveContours;
 }
     
     
@@ -957,8 +985,8 @@ int IndexOfPreceedingPointOnEdge( const Polygon &polygon, const struct coord coo
     //assert(false);
     return -1;
 }
-    
 
+    
 void EmbedEdgeHolesIntoParent( Polygon &polygon, struct rect rect )
 {
     for ( size_t holeIdx = 0; holeIdx < polygon.holes.size(); holeIdx++ )
@@ -1042,11 +1070,6 @@ void EmbedEdgeHolesIntoParent( Polygon &polygon, struct rect rect )
             }
             
             endInsertionIndex = IndexOfPreceedingPointOnEdge( polygon, hole.back(), rect );
-            /*if ( endInsertionIndex == -1 )
-             {
-             printf("Parent polygon END does not contain child polygon, but start did???\n");
-             continue;
-             }*/
         }
         
         bool cutCorners = true;
@@ -1079,13 +1102,10 @@ void EmbedEdgeHolesIntoParent( Polygon &polygon, struct rect rect )
             polygon.erase( polygon.begin(), polygon.begin() + nrCutCornersStart );
         }
         
-        // ToDo
-        //CleanHole(hole);
-        
         //
         //  Recalc insertion point
         //
-        //if ( cutCorners )
+        if ( cutCorners )
         {
             if ( EdgeForCoord( hole[0], rect ) == EdgeNotAnEdge || EdgeForCoord( hole.back(), rect ) == EdgeNotAnEdge )
             {
@@ -1108,75 +1128,99 @@ void EmbedEdgeHolesIntoParent( Polygon &polygon, struct rect rect )
         holeIdx--;
     }
 }
+
     
-    
-void AssignHolesToOuterPolygons( const std::vector<Polygon> &outerPolygons, const std::vector<Polygon> &holes, std::vector<Polygon> &completed )
+void AssignHolesToOuterPolygons( std::vector<Polygon> &outerPolygons, const std::vector<Polygon> &holes )
 {
-    vector<vector<int> > polygonHoles(outerPolygons.size());
-    
-    for ( int holeIdx = 0; holeIdx < (int) holes.size(); holeIdx++ )
+    for ( auto &hole : holes )
     {
-        auto &hole = holes[holeIdx];
-        
-        for ( size_t polygonIdx = 0; polygonIdx < outerPolygons.size(); polygonIdx++ )
+        for ( auto &outerPoly : outerPolygons )
         {
-            int pointInPoly = PointInPolygon( outerPolygons[polygonIdx], hole[0] );
+            int pointInPoly = PointInPolygon( outerPoly, hole[0] );
             
             if ( pointInPoly == -1 )
             {
-                pointInPoly = PointInPolygon( outerPolygons[polygonIdx], hole[hole.size() / 2] );
+                pointInPoly = PointInPolygon( outerPoly, hole[hole.size() / 2] );
             }
             
             if ( pointInPoly != 0 )
             {
-                polygonHoles[polygonIdx].emplace_back(holeIdx);
+                outerPoly.holes.emplace_back( hole );
                 break;
             }
         }
     }
-    
-    for ( size_t polygonIdx = 0; polygonIdx < outerPolygons.size(); polygonIdx++ )
-    {
-        auto outer = outerPolygons[polygonIdx];
-        
-        for ( int holeIdx : polygonHoles[polygonIdx] )
-        {
-            outer.holes.emplace_back( holes[holeIdx] );
-        }
-        
-        completed.emplace_back( outer );
-    }
 }
 
     
-    
-vector<Polygon> RayClipPolygon( const Polygon &inputPolygon, struct rect rect )
+void RayClipPolygon( const Polygon &inputPolygon, struct rect rect, vector<Polygon> &outputPolygons )
 {
-    vector<Polygon> polygons = GetClippedContours(inputPolygon, rect);
-    vector<Polygon> allClippedHoles;
+    vector<Contour> contours;
+    ContourResult outsideResult = GetClippedContours(inputPolygon, rect, contours);
+    
+    if ( outsideResult == ContourResultNothingInside )
+    {
+        return;
+    }
+    
+    if ( outsideResult == ContourResultEntirelyInside )
+    {
+        outputPolygons.emplace_back( inputPolygon );
+        return;
+    }
+    
+    assert ( outsideResult == ContourResultCompletelyCovers || outsideResult == ContourResultHaveContours );
+    
+    vector<Polygon> internalHoles;
     
     for ( auto &hole : inputPolygon.holes )
     {
-        vector<Polygon> holes = GetClippedContours( hole, rect );
-        allClippedHoles.insert( allClippedHoles.end(), holes.begin(), holes.end() );
+        ContourResult insideResult = GetClippedContours( hole, rect, contours );
+        
+        switch ( insideResult )
+        {
+            case ContourResultNothingInside:
+                continue;
+            case ContourResultCompletelyCovers:
+                assert ( outsideResult == insideResult );   // If the hole totally covers, the parent must also
+                return;
+            case ContourResultEntirelyInside:
+                internalHoles.emplace_back( hole );
+                continue;
+            case ContourResultHaveContours:
+                //  Result already in contours
+                break;
+        }
     }
     
-    for ( auto &hole : allClippedHoles )
+    if ( contours.size() == 0 )
     {
-        std::reverse(hole.begin(), hole.end());
+        if ( outsideResult == ContourResultCompletelyCovers )
+        {
+            Polygon rectAsPolygon;
+            rectAsPolygon.emplace_back(rect.l);
+            rectAsPolygon.emplace_back(coord{rect.l.x, rect.h.y});
+            rectAsPolygon.emplace_back(rect.h);
+            rectAsPolygon.emplace_back(coord{rect.h.x, rect.l.y});
+            outputPolygons.emplace_back( rectAsPolygon );
+            
+            for ( auto &internalHole : internalHoles )
+            {
+                rectAsPolygon.holes.emplace_back( internalHole );
+            }
+        }
+        
+        return;
     }
     
-    vector<Polygon> completed;
-    AssignHolesToOuterPolygons( polygons, allClippedHoles, completed );
+    ClosePolygons(contours, rect, outputPolygons);
+    AssignHolesToOuterPolygons(outputPolygons, internalHoles);
     
-    for ( auto &polygon : completed )
+    for ( auto &polygon : outputPolygons )
     {
         EmbedEdgeHolesIntoParent( polygon, rect );
     }
-    
-    return completed;
 }
-
     
     
 bool LastSelfIntersection( const Polygon &inputPolygon, const size_t startIndex, size_t &continuationIndex, struct coord &intersectionPoint )

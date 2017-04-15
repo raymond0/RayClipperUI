@@ -20,14 +20,17 @@ typedef struct coord {
 } coord;
 
 struct rect {struct coord l,h;};
-    
-class Polygon : public std::vector<struct coord>
+
+typedef std::vector<struct coord> Contour;
+class Polygon : public Contour
 {
 public:
     std::vector<Polygon> holes;
+    Polygon() {}
+    Polygon( const Contour &contour ) { insert( end(), contour.begin(), contour.end() ); }
 };
 
-std::vector<Polygon> RayClipPolygon( const Polygon &inputPolygon, struct rect rect );
+void RayClipPolygon( const Polygon &inputPolygon, struct rect rect, std::vector<Polygon> &outputPolygons );
 void CleanPolygon( const Polygon &inputPolygon, Polygon &outputPolygon );
 long long PolygonArea(const Polygon &coords);
 }
