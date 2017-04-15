@@ -7,6 +7,7 @@
 //
 
 #import <Cocoa/Cocoa.h>
+#import "UIPolygon.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,7 +20,7 @@ extern "C" {
 @interface PolygonView : NSView
 
 @property (nonatomic, assign) CGRect clipRect;
-@property (nonatomic, strong) NSArray *polygons;
+@property (nonatomic, strong) NSArray<UIPolygon *> *polygons;
 @property (nonatomic, assign) CGFloat scale;
 @property (nonatomic, weak) id<PolygonViewDelegate> delegate;
 -(void)drawString:(NSString *)str atPosition:(CGPoint)position;

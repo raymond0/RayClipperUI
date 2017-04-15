@@ -93,32 +93,51 @@
     [self drawString:maxStr atPosition:CGPointMake(_clipDrawingRect.origin.x + _clipDrawingRect.size.width,
                                                    _clipDrawingRect.origin.y + _clipDrawingRect.size.height + 8)];
     
-    for ( NSArray *polygon in _polygons )
+    for ( UIPolygon *polygon in _polygons )
     {
         CGMutablePathRef path = CGPathCreateMutable();
-        for ( NSInteger i = 0; i < polygon.count; i++ )
-        {
-            NSValue *value = polygon[i];
-            NSPoint point = [value pointValue];
-            CGFloat relativeX = ( ( point.x - _clipRect.origin.x ) * _renderRatio ) + _renderOrigin.x;
-            CGFloat relativeY = ( ( point.y - _clipRect.origin.y ) * _renderRatio ) + _renderOrigin.y;
-            
-            if ( i == 0 )
-            {
-                CGPathMoveToPoint(path, NULL, relativeX, relativeY);
-            }
-            else
-            {
-                CGPathAddLineToPoint(path, NULL, relativeX, relativeY);
-            }
-        }
         
-        CGPathCloseSubpath(path);
+        [self addPolygon:polygon toPath:path];
+
         CGContextAddPath(context, path);
         CGContextSetRGBFillColor(context, 0.0, 0, 1.0, 0.3);
-        CGContextDrawPath(context, kCGPathFillStroke);
+        CGContextDrawPath(context, kCGPathEOFillStroke);
         CGPathRelease(path);
     }
+}
+
+
+-(void)addPolygon:(UIPolygon *)polygon toPath:(CGMutablePathRef)path
+{
+    [self addContour:polygon.contour toPath:path];
+    
+    for ( UIPolygon *hole in polygon.holes )
+    {
+        [self addPolygon:hole toPath:path];
+    }
+}
+
+
+-(void)addContour:(NSArray *)contour toPath:(CGMutablePathRef)path
+{
+    for ( NSInteger i = 0; i < contour.count; i++ )
+    {
+        NSValue *value = contour[i];
+        NSPoint point = [value pointValue];
+        CGFloat relativeX = ( ( point.x - _clipRect.origin.x ) * _renderRatio ) + _renderOrigin.x;
+        CGFloat relativeY = ( ( point.y - _clipRect.origin.y ) * _renderRatio ) + _renderOrigin.y;
+        
+        if ( i == 0 )
+        {
+            CGPathMoveToPoint(path, NULL, relativeX, relativeY);
+        }
+        else
+        {
+            CGPathAddLineToPoint(path, NULL, relativeX, relativeY);
+        }
+    }
+    
+    CGPathCloseSubpath(path);
 }
 
 

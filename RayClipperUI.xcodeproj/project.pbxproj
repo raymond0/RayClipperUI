@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		712612A11EA09E2000FB23C1 /* UIPolygon.m in Sources */ = {isa = PBXBuildFile; fileRef = 712612A01EA09E2000FB23C1 /* UIPolygon.m */; };
 		712AA12D1DE3B89600D9616E /* ClipperWrapper.mm in Sources */ = {isa = PBXBuildFile; fileRef = 712AA12B1DE3B89600D9616E /* ClipperWrapper.mm */; };
 		712AA12E1DE3C02D00D9616E /* rayclipper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 71FBF29C1DE295F500C75E17 /* rayclipper.cpp */; };
 		719E9FC21DE505EF009EC034 /* libCGAL_Core.12.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 719E9FBE1DE505EF009EC034 /* libCGAL_Core.12.0.0.dylib */; };
@@ -14,7 +15,6 @@
 		719E9FC41DE505EF009EC034 /* libCGAL_ImageIO.12.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 719E9FC01DE505EF009EC034 /* libCGAL_ImageIO.12.0.0.dylib */; };
 		719E9FC51DE505EF009EC034 /* libCGAL.12.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 719E9FC11DE505EF009EC034 /* libCGAL.12.0.0.dylib */; };
 		719E9FD61DE7A7D5009EC034 /* Avl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 719E9FD41DE7A7D5009EC034 /* Avl.cpp */; };
-		719E9FD81DECDFA0009EC034 /* PolygonChecking.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 719E9FC61DE5077F009EC034 /* PolygonChecking.cpp */; };
 		71FBF2761DE2931A00C75E17 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 71FBF2751DE2931A00C75E17 /* AppDelegate.m */; };
 		71FBF2791DE2931A00C75E17 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 71FBF2781DE2931A00C75E17 /* main.m */; };
 		71FBF27C1DE2931A00C75E17 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 71FBF27B1DE2931A00C75E17 /* ViewController.m */; };
@@ -36,6 +36,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		7126129F1EA09E2000FB23C1 /* UIPolygon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UIPolygon.h; sourceTree = "<group>"; };
+		712612A01EA09E2000FB23C1 /* UIPolygon.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UIPolygon.m; sourceTree = "<group>"; };
 		712AA12B1DE3B89600D9616E /* ClipperWrapper.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ClipperWrapper.mm; sourceTree = "<group>"; };
 		712AA12C1DE3B89600D9616E /* ClipperWrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ClipperWrapper.h; sourceTree = "<group>"; };
 		719E9FBE1DE505EF009EC034 /* libCGAL_Core.12.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libCGAL_Core.12.0.0.dylib; path = ../../../../../opt/local/lib/libCGAL_Core.12.0.0.dylib; sourceTree = "<group>"; };
@@ -143,6 +145,8 @@
 				712AA12C1DE3B89600D9616E /* ClipperWrapper.h */,
 				719E9FC61DE5077F009EC034 /* PolygonChecking.cpp */,
 				719E9FC71DE5077F009EC034 /* PolygonChecking.h */,
+				7126129F1EA09E2000FB23C1 /* UIPolygon.h */,
+				712612A01EA09E2000FB23C1 /* UIPolygon.m */,
 			);
 			path = RayClipperUI;
 			sourceTree = "<group>";
@@ -266,7 +270,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				719E9FD61DE7A7D5009EC034 /* Avl.cpp in Sources */,
-				719E9FD81DECDFA0009EC034 /* PolygonChecking.cpp in Sources */,
 				71FBF27C1DE2931A00C75E17 /* ViewController.m in Sources */,
 				71FBF2791DE2931A00C75E17 /* main.m in Sources */,
 				71FBF2761DE2931A00C75E17 /* AppDelegate.m in Sources */,
@@ -274,6 +277,7 @@
 				71FBF29D1DE295F500C75E17 /* geom.cpp in Sources */,
 				712AA12E1DE3C02D00D9616E /* rayclipper.cpp in Sources */,
 				71FBF2981DE2936B00C75E17 /* PolygonView.m in Sources */,
+				712612A11EA09E2000FB23C1 /* UIPolygon.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -348,7 +352,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = /opt/local/include;
+				HEADER_SEARCH_PATHS = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -391,7 +395,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = /opt/local/include;
+				HEADER_SEARCH_PATHS = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
