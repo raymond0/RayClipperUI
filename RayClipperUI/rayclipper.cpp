@@ -985,20 +985,78 @@ int IndexOfPreceedingPointOnEdge( const Polygon &polygon, const struct coord coo
     //assert(false);
     return -1;
 }
+    
+
+bool PolygonWithIncidentEdge( Polygon &polygon, struct rect rect, Polygon &output )
+{
+    if ( polygon.size() < 2 )
+    {
+        return false;
+    }
+
+    if ( EdgeForCoord( polygon[0], rect ) != EdgeNotAnEdge && EdgeForCoord( polygon.back(), rect ) != EdgeNotAnEdge )
+    {
+        size_t firstIndex = 0;
+        size_t secondIndex = polygon.size() - 1;
+        
+        while ( firstIndex < secondIndex - 1 && EdgeForCoord( polygon[firstIndex + 1], rect ) != EdgeNotAnEdge )
+        {
+            firstIndex++;
+        }
+
+        while ( secondIndex > firstIndex + 1 && EdgeForCoord( polygon[secondIndex - 1], rect ) != EdgeNotAnEdge )
+        {
+            secondIndex--;
+        }
+
+        output.insert( output.end(), polygon.begin() + firstIndex, polygon.begin() + secondIndex + 1 );
+        return true;
+    }
+    
+    for ( size_t secondIndex = 1; secondIndex < polygon.size() - 1; secondIndex++ )    // We know first/last are not a pair
+    {
+        EdgeType secondEdge = EdgeForCoord( polygon[secondIndex], rect );
+        
+        if ( secondEdge == EdgeNotAnEdge )
+        {
+            secondIndex++;
+            continue;
+        }
+        
+        size_t firstIndex = secondIndex - 1;
+        EdgeType firstEdge = EdgeForCoord( polygon[ firstIndex ], rect );
+        if ( firstEdge == EdgeNotAnEdge )
+        {
+            continue;
+        }
+        
+        while ( secondIndex < polygon.size() - 1 && EdgeForCoord( polygon[secondIndex + 1], rect ) != EdgeNotAnEdge )
+        {
+            secondIndex++;
+        }
+        
+        while ( firstIndex > 1 && EdgeForCoord( polygon[firstIndex - 1], rect ) != EdgeNotAnEdge )
+        {
+            firstIndex--;
+        }
+
+        output.insert( output.end(), polygon.begin() + secondIndex, polygon.end() );
+        output.insert( output.end(), polygon.begin(), polygon.begin() + secondIndex );
+        return true;
+    }
+    
+    return false;
+}
 
     
 void EmbedEdgeHolesIntoParent( Polygon &polygon, struct rect rect )
 {
     for ( size_t holeIdx = 0; holeIdx < polygon.holes.size(); holeIdx++ )
     {
-        Polygon &hole = polygon.holes[holeIdx];
+        Polygon &unalignedHole = polygon.holes[holeIdx];
+        Polygon hole;
         
-        if ( EdgeForCoord( hole[0], rect ) == EdgeNotAnEdge || EdgeForCoord( hole.back(), rect ) == EdgeNotAnEdge )
-        {
-            continue;
-        }
-        
-        if ( hole.size() < 2 )
+        if ( ! PolygonWithIncidentEdge( unalignedHole, rect, hole ) )
         {
             continue;
         }
@@ -1166,6 +1224,15 @@ void RayClipPolygon( const Polygon &inputPolygon, struct rect rect, vector<Polyg
     if ( outsideResult == ContourResultEntirelyInside )
     {
         outputPolygons.emplace_back( inputPolygon );
+        
+        //
+        //  Still embed the holes, if there are any
+        //
+        for ( auto &polygon : outputPolygons )
+        {
+            EmbedEdgeHolesIntoParent( polygon, rect );
+        }
+
         return;
     }
     
