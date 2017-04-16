@@ -83,8 +83,8 @@
     } while ( ! outputWasLarge );
 
     //outputWasLarge = [wrapper outputWasLarge];
-    inputSelfIntersectsLabel.hidden = ![wrapper inputSelfIntersects];
-    outputSelfIntersectsLabel.hidden = ![wrapper outputSelfIntersects];
+    //inputSelfIntersectsLabel.hidden = ![wrapper inputSelfIntersects];
+    //outputSelfIntersectsLabel.hidden = ![wrapper outputSelfIntersects];
 
     NSArray *inputP = [wrapper getInputPolygons];
     NSArray *outputP = [wrapper getOutputPolygons];
@@ -110,9 +110,9 @@
 
 - (IBAction)goPressed:(NSButton *)sender
 {
-    _performingLarge = ! _performingLarge;
+    //_performingLarge = ! _performingLarge;
     
-    if ( _performingLarge )
+    //if ( _performingLarge )
     {
         [self performNext];
     }
@@ -123,8 +123,8 @@
 {
     if ( wrapper == nil )
     {
-        wrapper = [[ClipperWrapper alloc] initWithPath:@"/Users/ray/projects/atomicrabbit/maptools/maptool/workingdir_amsterdam/PolyDebug.bin"];
-        //wrapper = [[ClipperWrapper alloc] initWithPath:@"/Users/ray/temp/FailedPolygons/PolyDebug.bin"];
+        wrapper = [[ClipperWrapper alloc] initWithPath:@"/Users/ray/temp/DebugPolys.bin"];
+        //wrapper = [[ClipperWrapper alloc] initWithPath:@"/Users/ray/temp/FailedPolygons/PolyDebug5.bin"];
         //wrapper = [[ClipperWrapper alloc] initWithPath:@"/Users/ray/temp/FailedPolygons/PolyDebug.bin"];
         //wrapper = [[ClipperWrapper alloc] init];
     }
@@ -162,9 +162,9 @@
 - (IBAction)repestPressed:(NSButton *)sender
 {
     NSArray *inputP = [wrapper getInputPolygons];
-    inputSelfIntersectsLabel.hidden = ![wrapper inputSelfIntersects];
+    //inputSelfIntersectsLabel.hidden = ![wrapper inputSelfIntersects];
     [wrapper runClipper];
-    outputSelfIntersectsLabel.hidden = ![wrapper outputSelfIntersects];
+    //outputSelfIntersectsLabel.hidden = ![wrapper outputSelfIntersects];
     NSArray *outputP = [wrapper getOutputPolygons];
     
     _inputView.polygons = inputP;

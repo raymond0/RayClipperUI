@@ -25,6 +25,8 @@ using namespace rayclipper;
 {
     self = [super init];
     
+    nextTest = 100;
+    
     return self;
 }
 
@@ -114,21 +116,42 @@ geom_poly_area(const struct coord *c, size_t count)
         if ( fread(&_cliprect, sizeof( struct rect ), 1, polyFile) != 1 ) return NO;
         int nrCoords = 0;
         if ( fread(&nrCoords, sizeof( int ), 1, polyFile ) != 1 ) return NO;
+        int nrHoles = 0;
+        if ( fread(&nrHoles, sizeof( int ), 1, polyFile ) != 1 ) return NO;
         input.resize(nrCoords);
         if ( fread(&input[0], sizeof(struct coord), nrCoords, polyFile ) != nrCoords ) return NO;
+        input.holes.resize(nrHoles);
+        
+        for ( int i = 0; i < nrHoles; i++ )
+        {
+            int nrHoleCoords = 0;
+            if ( fread(&nrHoleCoords, sizeof( int ), 1, polyFile ) != 1 ) return NO;
+            input.holes[i].resize(nrHoleCoords);
+            if ( fread(&input.holes[i][0], sizeof(struct coord), nrHoleCoords, polyFile ) != nrHoleCoords ) return NO;
+            reverse(input.holes[i].begin(), input.holes[i].end());
+        }
+        
         return YES;
     }
     
-    [self test15];
-    /*NSString *testName = [NSString stringWithFormat:@"test%ld", (long)nextTest];
-    nextTest = ( nextTest + 1 ) % 12;
+    //[self test15];
+    NSString *testName = [NSString stringWithFormat:@"test%ld", (long)nextTest];
+    nextTest++; // = ( nextTest + 1 ) % 12;
     SEL testSel = NSSelectorFromString(testName);
-    [self performSelector:testSel];*/
+    
+    if ( ![self respondsToSelector:testSel] )
+    {
+        nextTest = 101;
+        [self test100];
+        return YES;
+    }
+    
+    [self performSelector:testSel];
     return YES;
 }
 
 
--(bool)inputSelfIntersects
+/*-(bool)inputSelfIntersects
 {
     return PolygonSelfIntersects( input );
 }
@@ -144,31 +167,45 @@ geom_poly_area(const struct coord *c, size_t count)
     }
     
     return NO;
-}
+}*/
 
 
 -(void)runClipper
 {
-    output = rayclipper::RayClipPolygon(input, _cliprect);
+    if ( rayclipper::PolygonArea( input ) < 0 )
+    {
+        std::reverse( input.begin(), input.end() );
+    }
+    
+    //rayclipper::Polygon cleaned;
+    //rayclipper::CleanPolygon( input, cleaned );
+    output.clear();
+    rayclipper::RayClipPolygon(input, _cliprect, output);
 }
 
 
--(NSArray *)getInputPolygons
+-(NSArray<UIPolygon *> *)getInputPolygons
 {
     NSMutableArray *polygons = [NSMutableArray array];
-    NSArray *polygon = [self getArrayForPolygon:input];
+    UIPolygon *polygon = [self getUIPolygonForPolygon:input];
+    
+    for ( UIPolygon *hole in polygon.holes )
+    {
+        hole.contour = [NSMutableArray arrayWithArray:[[hole.contour reverseObjectEnumerator] allObjects]];
+    }
+    
     [polygons addObject:polygon];
     return polygons;
 }
 
 
--(NSArray *)getOutputPolygons
+-(NSArray<UIPolygon *> *)getOutputPolygons
 {
-    NSMutableArray *polygons = [NSMutableArray array];
+    NSMutableArray<UIPolygon *> *polygons = [NSMutableArray array];
     
     for ( auto outPoly : output )
     {
-        NSArray *polygon = [self getArrayForPolygon:outPoly];
+        UIPolygon *polygon = [self getUIPolygonForPolygon:outPoly];
         [polygons addObject:polygon];
     }
     
@@ -176,14 +213,19 @@ geom_poly_area(const struct coord *c, size_t count)
 }
 
 
--(NSArray *)getArrayForPolygon:(rayclipper::Polygon)source
+-(UIPolygon *)getUIPolygonForPolygon:(rayclipper::Polygon)source
 {
-    NSMutableArray *polygon = [NSMutableArray array];
+    UIPolygon *polygon = [[UIPolygon alloc] init];
     
     for ( auto coord : source )
     {
         NSPoint p = NSMakePoint(coord.x, coord.y);
-        [polygon addObject:[NSValue valueWithPoint:p]];
+        [polygon.contour addObject:[NSValue valueWithPoint:p]];
+    }
+    
+    for ( auto &hole : source.holes )
+    {
+        [polygon.holes addObject:[self getUIPolygonForPolygon:hole]];
     }
 
     return polygon;
@@ -201,6 +243,209 @@ std::vector<T>& operator,(std::vector<T>& v, const T & item)
     v.push_back(item);  return v;
 }
 
+#define c(x...) coord{ x }
+
+-(void)test100
+{
+    _cliprect = { {0,0}, {100,100}};
+    
+    rayclipper::Polygon p;
+    p << coord{ 20,20 } << coord{ 20,80 } << coord{ 80,80 } << coord{ 80,20 };
+    
+    rayclipper::Polygon hole;
+    hole << coord{ 40,40 } << coord{ 40,60 } << coord{ 60,60 } << coord{ 60,40 };
+    reverse( hole.begin(), hole.end() );
+    p.holes << hole;
+    
+    input = p;
+}
+
+
+-(void)test101
+{
+    _cliprect = { {0,0}, {100,100}};
+    
+    rayclipper::Polygon p;
+    p << c( -20,150 ) << c( 90,150 ) << c( 90,70 ) << c( 70,70 ) << c( 70,120 ) << c( 30,120 ) << c( 30,50 )
+    << c( 30,-20 ) << c( -20,-20 );
+    
+    rayclipper::Polygon hole;
+    hole << coord{ -10,40 } << coord{ -10,60 } << coord{ 10,60 } << coord{ 10,40 };
+    reverse( hole.begin(), hole.end() );
+    p.holes << hole;
+
+    input = p;
+}
+
+-(void)test102
+{
+    _cliprect = { {0,0}, {100,100}};
+    
+    rayclipper::Polygon p;
+    p << c( -20,150 ) << c( 90,150 ) << c( 90,70 ) << c( 70,70 ) << c( 70,120 ) << c( 30,120 ) << c( 30,50 )
+    << c( 30,-20 ) << c( -20,-20 );
+    
+    rayclipper::Polygon hole;
+    hole << c( -5,-5 ) << c(-5,40 ) << c( 10,40 ) << c( 10,60 ) << c (-5,60) << c (-5,105) << c (20,100) << c(20,-5);
+    reverse( hole.begin(), hole.end() );
+    p.holes << hole;
+    
+    input = p;
+}
+
+
+-(void)test103
+{
+    _cliprect = { {0,0}, {100,100}};
+    
+    rayclipper::Polygon p;
+    p << c( -20,-20 ) << c( -20,120 ) << c( 120,120 ) << c( 120,-20 );
+    
+    rayclipper::Polygon hole;
+    hole << coord{ -10,40 } << coord{ -10,60 } << coord{ 110,60 } << coord{ 110,40 };
+    reverse( hole.begin(), hole.end() );
+    p.holes << hole;
+    
+    input = p;
+}
+
+
+
+-(void)test104
+{
+    _cliprect = { {0,0}, {100,100}};
+    
+    rayclipper::Polygon p;
+    p << c( -20,-20 ) << c( -20,120 ) << c( 120,120 ) << c( 120,-20 );
+    
+    rayclipper::Polygon hole;
+    hole << coord{ -10,-10 } << coord{ -10,110 } << coord{ 110,110 } << coord{ 110,-10 };
+    reverse( hole.begin(), hole.end() );
+    p.holes << hole;
+    
+    input = p;
+}
+
+
+-(void)test105
+{
+    // -9714353, 5641458 -> -9713131, 5642679
+    _cliprect = { {-9714353, 5641458}, {-9713131, 5642679}};
+    
+    rayclipper::Polygon p;
+    p << c(-9704580, 5639015)
+    << c(-9714353, 5639015)
+    << c(-9714353, 5648788)
+    << c(-9704580, 5648788);
+    
+    rayclipper::Polygon hole;
+    hole << c(-9710384, 5639985)
+    << c(-9711540, 5640775)
+    << c(-9712965, 5641663)
+    << c(-9714346, 5642449)
+    << c(-9714353, 5642453)
+    << c(-9714353, 5647149)
+    << c(-9714139, 5646734)
+    << c(-9714127, 5646553)
+    << c(-9713966, 5646375)
+    << c(-9713363, 5646372)
+    << c(-9713214, 5646419)
+    << c(-9712935, 5646622)
+    << c(-9712350, 5647172)
+    << c(-9712248, 5647465)
+    << c(-9712220, 5647920)
+    << c(-9711984, 5648177)
+    << c(-9711601, 5648465)
+    << c(-9711508, 5648581)
+    << c(-9711305, 5648570)
+    << c(-9711201, 5648498)
+    << c(-9711154, 5648243)
+    << c(-9710906, 5647727)
+    << c(-9710934, 5647624)
+    << c(-9711215, 5647283)
+    << c(-9711242, 5647234)
+    << c(-9711202, 5647200)
+    << c(-9711224, 5647159)
+    << c(-9711228, 5647196)
+    << c(-9711291, 5647223)
+    << c(-9711349, 5647195)
+    << c(-9711445, 5647125)
+    << c(-9711472, 5647024)
+    << c(-9711436, 5646800)
+    << c(-9711254, 5646283)
+    << c(-9711147, 5645736)
+    << c(-9711279, 5644365)
+    << c(-9711292, 5643709)
+    << c(-9711404, 5643248)
+    << c(-9711546, 5642897)
+    << c(-9711562, 5642211)
+    << c(-9711487, 5641883)
+    << c(-9711330, 5641510)
+    << c(-9711097, 5641156)
+    << c(-9710767, 5640510);
+
+    reverse( hole.begin(), hole.end() );
+
+    p.holes << hole;
+    
+    input = p;
+}
+
+
+-(void)test106
+{
+    _cliprect = { {-9715574, 5642679}, {-9714353, 5643901}};
+    
+    rayclipper::Polygon p;
+    p << c(-9714353, 5629242)
+    << c(-9733899, 5629242)
+    << c(-9733899, 5645985)
+    << c(-9733534, 5646872)
+    << c(-9733473, 5647177)
+    << c(-9733526, 5647214)
+    << c(-9733460, 5647214)
+    << c(-9733322, 5647583)
+    << c(-9732281, 5648646)
+    << c(-9732067, 5648788)
+    << c(-9714353, 5648788);
+    
+    rayclipper::Polygon hole;
+    hole << c(-9714353, 5642419)
+    << c(-9715851, 5643235)
+    << c(-9715924, 5643482)
+    << c(-9715937, 5644250)
+    << c(-9715674, 5644720)
+    << c(-9715596, 5645100)
+    << c(-9715638, 5646050)
+    << c(-9715761, 5646459)
+    << c(-9714910, 5646566)
+    << c(-9714684, 5646783)
+    << c(-9714619, 5647187)
+    << c(-9714506, 5647246)
+    << c(-9714378, 5647198)
+    << c(-9714353, 5647149);
+    reverse( hole.begin(), hole.end() );
+
+    p.holes << hole;
+    
+    input = p;
+}
+
+
+-(void)test107
+{
+    _cliprect = { {0,0}, {100,100}};
+    
+    rayclipper::Polygon p;
+    p << c( 10,10 ) << c( 20,110 ) << c( 110,110 ) << c( 90,90 ) << c( 90,15 );
+    
+    rayclipper::Polygon hole;
+    hole << coord{ 40,40 } << coord{ 60,40 } << coord{ 60,60 } << coord{ 40,60 };
+    p.holes << hole;
+    
+    input = p;
+}
+
 
 -(void)test0
 {
@@ -208,6 +453,7 @@ std::vector<T>& operator,(std::vector<T>& v, const T & item)
     
     rayclipper::Polygon p;
     p << coord{ 20,20 } << coord{ -20,20 } << coord{ -20,40 } << coord{ 20,40 };
+    
     input = p;
 }
 
@@ -240,8 +486,6 @@ std::vector<T>& operator,(std::vector<T>& v, const T & item)
     p << coord{ 60,20 } << coord{ 60,-20 } << coord{ 40,-20 } << coord{ 40,20 };
     input = p;
 }
-
-#define c(x...) coord{ x }
 
 -(void)test4
 {
@@ -396,6 +640,47 @@ std::vector<T>& operator,(std::vector<T>& v, const T & item)
     
     input = p;
 }
+
+
+-(void)test16
+{
+    _cliprect = { {0,0}, {100,100}};
+    
+    rayclipper::Polygon p;
+    p << c( -20, 50 ) << c( 30, 60 ) << c( 50, 30 ) << c( 50, 60 ) << c( 30, 30 );
+    input = p;
+}
+
+
+-(void)test17
+{
+    _cliprect = { {0,0}, {100,100}};
+    
+    rayclipper::Polygon p;
+    p << c( -20, 50 ) << c( 50, 80 ) << c( 50, 20 ) << c( 25, 90 );
+    input = p;
+}
+
+
+-(void)test18
+{
+    _cliprect = { {0,0}, {100,100}};
+    
+    rayclipper::Polygon p;
+    p << c( -20, 60 ) << c( 60, 60 ) << c( 60, 40 ) << c( 40, 40 ) << c( 40, 80 ) << c( 80, 80 ) << c( 80, 20 ) << c( -20, 20 );
+    input = p;
+}
+
+
+-(void)test19
+{
+    _cliprect = { {0,0}, {100,100}};
+    
+    rayclipper::Polygon p;
+    p << c( -20, 60 ) << c( 60, 60 ) << c( 60, 40 ) << c( 40, 40 ) << c( 40, 120 ) << c( 80, 120 ) << c( 80, 20 ) << c( -20, 20 );
+    input = p;
+}
+
 
 
 @end

@@ -10,6 +10,7 @@
 #define ClipperWrapper_hpp
 
 #import <Cocoa/Cocoa.h>
+#import "UIPolygon.h"
 
 @interface ClipperWrapper : NSObject
 
@@ -17,11 +18,11 @@
 -(instancetype)initWithPath:(NSString *)path;
 -(BOOL)loadInput;
 -(void)runClipper;
--(NSArray *)getInputPolygons;
--(NSArray *)getOutputPolygons;
+-(NSArray<UIPolygon *> *)getInputPolygons;
+-(NSArray<UIPolygon *> *)getOutputPolygons;
 //-(NSArray *)rawInputCoords;
--(bool)inputSelfIntersects;
--(bool)outputSelfIntersects;
+//-(bool)inputSelfIntersects;
+//-(bool)outputSelfIntersects;
 -(BOOL)outputWasLarge;
 -(CGRect)clipRectAsCGRect;
 -(NSData *)binaryData;

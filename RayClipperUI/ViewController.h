@@ -6,7 +6,7 @@
 //  Copyright © 2016 Atomic Rabbit Ltd. All rights reserved.
 //
 
-#import <Cocoa/Cocoa.h>
+//#import <Cocoa/Cocoa.h>
 #import "PolygonView.h"
 
 @interface ViewController : NSViewController <PolygonViewDelegate>
