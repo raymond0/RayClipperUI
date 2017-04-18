@@ -987,200 +987,224 @@ int IndexOfPreceedingPointOnEdge( const Polygon &polygon, const struct coord coo
 }
     
 
-bool PolygonWithIncidentEdge( Polygon &polygon, struct rect rect, Polygon &output )
+void PolygonsWithIncidentEdge( Polygon &polygon, struct rect rect, vector<Polygon> &output )
 {
     if ( polygon.size() < 2 )
     {
-        return false;
-    }
-
-    if ( EdgeForCoord( polygon[0], rect ) != EdgeNotAnEdge && EdgeForCoord( polygon.back(), rect ) != EdgeNotAnEdge )
-    {
-        size_t firstIndex = 0;
-        size_t secondIndex = polygon.size() - 1;
-        
-        while ( firstIndex < secondIndex - 1 && EdgeForCoord( polygon[firstIndex + 1], rect ) != EdgeNotAnEdge )
-        {
-            firstIndex++;
-        }
-
-        while ( secondIndex > firstIndex + 1 && EdgeForCoord( polygon[secondIndex - 1], rect ) != EdgeNotAnEdge )
-        {
-            secondIndex--;
-        }
-
-        output.insert( output.end(), polygon.begin() + firstIndex, polygon.begin() + secondIndex + 1 );
-        return true;
+        return;
     }
     
-    for ( size_t secondIndex = 1; secondIndex < polygon.size() - 1; secondIndex++ )    // We know first/last are not a pair
+    for ( size_t firstIndex = 0; firstIndex < polygon.size(); firstIndex++ )
     {
-        EdgeType secondEdge = EdgeForCoord( polygon[secondIndex], rect );
+        EdgeType firstEdge = EdgeForCoord( polygon[firstIndex], rect );
         
-        if ( secondEdge == EdgeNotAnEdge )
-        {
-            secondIndex++;
-            continue;
-        }
-        
-        size_t firstIndex = secondIndex - 1;
-        EdgeType firstEdge = EdgeForCoord( polygon[ firstIndex ], rect );
         if ( firstEdge == EdgeNotAnEdge )
         {
             continue;
         }
         
-        while ( secondIndex < polygon.size() - 1 && EdgeForCoord( polygon[secondIndex + 1], rect ) != EdgeNotAnEdge )
+        while ( EdgeForCoord( polygon[ ( firstIndex + 1 ) % polygon.size() ], rect ) != EdgeNotAnEdge )
         {
-            secondIndex++;
+            firstIndex = ( firstIndex + 1 ) % polygon.size();
+            if ( firstIndex == 0 )
+            {
+                return;     // Back to start again
+            }
         }
         
-        while ( firstIndex > 1 && EdgeForCoord( polygon[firstIndex - 1], rect ) != EdgeNotAnEdge )
+        assert( EdgeForCoord( polygon[ firstIndex ], rect ) != EdgeNotAnEdge );
+        
+        size_t secondIndex;
+        for ( secondIndex = firstIndex + 1; secondIndex != firstIndex; secondIndex = ( secondIndex + 1 ) % polygon.size() )
         {
-            firstIndex--;
+            if ( EdgeForCoord( polygon[secondIndex], rect ) != EdgeNotAnEdge )
+            {
+                break;
+            }
         }
-
-        output.insert( output.end(), polygon.begin() + secondIndex, polygon.end() );
-        output.insert( output.end(), polygon.begin(), polygon.begin() + secondIndex );
+        
+        assert( EdgeForCoord( polygon[ firstIndex ], rect ) != EdgeNotAnEdge );
+        assert( EdgeForCoord( polygon[ secondIndex ], rect ) != EdgeNotAnEdge );
+        
+        Polygon outp;
+        if ( firstIndex < secondIndex )
+        {
+            outp.insert( outp.end(), polygon.begin() + firstIndex, polygon.begin() + secondIndex + 1 );
+            output.emplace_back( outp );
+        }
+        else
+        {
+            outp.insert( outp.end(), polygon.begin() + firstIndex, polygon.end() );
+            outp.insert( outp.end(), polygon.begin(), polygon.begin() + secondIndex + 1 );
+            output.emplace_back( outp );
+            
+            //  Can only look over end -> start once
+            return;
+        }
+        
+        firstIndex = secondIndex;
+    }
+}
+  
+    
+//
+// Return true if hole has devoured its parent
+//
+bool EmbedIncidentEdgeHoleIntoParent( Polygon &polygon, struct rect rect, Polygon &hole, vector<Polygon> &cutouts )
+{
+    int insertionIndex = IndexOfPreceedingPointOnEdge( polygon, hole[0], rect );
+    int endInsertionIndex = IndexOfPreceedingPointOnEdge( polygon, hole.back(), rect );
+    
+    if ( insertionIndex == -1 && endInsertionIndex == -1 )
+    {
+        cutouts.emplace_back( hole );
+        return false;
+    }
+    
+    assert( insertionIndex != -1 );
+    
+    bool haveRemovedEqualPoints = false;
+    //
+    //  Remove corners if we are chopping off part of a rectangle. i.e. the top part in a rectangle that
+    //  should render only the bottom part
+    //
+    while ( polygon.size() > 1 && hole.size() > 1 && coord_is_equal( polygon[insertionIndex], hole.front() ) )
+    {
+        int nextParentIndex = insertionIndex > 0 ? insertionIndex - 1 : (int) polygon.size() - 1;
+        EdgeType parentNextEdge = EdgeForCoord( polygon[nextParentIndex], rect );
+        EdgeType holeNextEdge = EdgeForCoord( hole[1], rect );
+        
+        if ( parentNextEdge != holeNextEdge )
+        {
+            break;
+        }
+        
+        polygon.erase( polygon.begin() + insertionIndex );
+        hole.erase( hole.begin() );
+        
+        insertionIndex--;
+        if ( insertionIndex < 0 ) insertionIndex = (int) polygon.size() - 1;
+        
+        haveRemovedEqualPoints = true;
+    }
+    
+    //
+    //  Hole has devoured its parent
+    //
+    if ( polygon.size() + hole.size() < 3 )
+    {
+        polygon.holes.clear();
+        polygon.clear();
         return true;
     }
     
+    //
+    //  Recalc insertion if equal corner points have been removed
+    //
+    if ( haveRemovedEqualPoints )
+    {
+        assert ( EdgeForCoord( hole[0], rect ) != EdgeNotAnEdge && EdgeForCoord( hole.back(), rect ) != EdgeNotAnEdge );
+        
+        insertionIndex = IndexOfPreceedingPointOnEdge( polygon, hole[0], rect );
+        assert ( insertionIndex != -1 );
+        
+        endInsertionIndex = IndexOfPreceedingPointOnEdge( polygon, hole.back(), rect );
+    }
+    
+    bool cutCorners = true;
+    if ( endInsertionIndex == - 1 )
+    {
+        cutCorners = false;
+    }
+    else if ( insertionIndex < endInsertionIndex )
+    {
+        // We cut 1+ corners
+        //__unused int nrCutCorners = endInsertionIndex - insertionIndex;
+        //assert( nrCutCorners < 4 );
+        
+        Polygon newPolygon;
+        newPolygon.insert(newPolygon.end(), polygon.begin() + insertionIndex + 1, polygon.begin() + endInsertionIndex);
+        cutouts.emplace_back(newPolygon);
+
+        polygon.erase( polygon.begin() + insertionIndex + 1, polygon.begin() + endInsertionIndex );
+    }
+    else if ( endInsertionIndex < insertionIndex )
+    {
+        // We're inserting over the start/end boundary of the parent while cutting corners
+        size_t nrCutCornersEnd = polygon.size() - insertionIndex - 1;
+        size_t nrCutCornersStart = endInsertionIndex + 1;
+        
+        if ( nrCutCornersStart + nrCutCornersEnd > 4 )
+        {
+            printf( "This one\n" );
+        }
+        
+        //assert (nrCutCornersStart + nrCutCornersEnd < 4);
+        //assert (nrCutCornersStart > 0);
+        
+        Polygon newPolygon;
+        newPolygon.insert(newPolygon.end(), polygon.begin() + insertionIndex + 1, polygon.end());
+        newPolygon.insert(newPolygon.end(), polygon.begin(), polygon.begin() + nrCutCornersStart);
+        cutouts.emplace_back(newPolygon);
+
+        if ( nrCutCornersEnd > 0 )
+        {
+            polygon.erase( polygon.begin() + insertionIndex + 1, polygon.end() );
+        }
+        
+        polygon.erase( polygon.begin(), polygon.begin() + nrCutCornersStart );
+    }
+    
+    //
+    //  Recalc insertion point
+    //
+    if ( cutCorners )
+    {
+        assert ( EdgeForCoord( hole[0], rect ) != EdgeNotAnEdge && EdgeForCoord( hole.back(), rect ) != EdgeNotAnEdge );
+        
+        insertionIndex = IndexOfPreceedingPointOnEdge( polygon, hole[0], rect );
+        
+        if ( insertionIndex == -1 )
+        {
+            // ToDo
+            cutouts.emplace_back(hole);
+            return false;
+        }
+        
+        assert ( insertionIndex != -1 );
+        
+        endInsertionIndex = IndexOfPreceedingPointOnEdge( polygon, hole.back(), rect );
+    }
+    
+    polygon.insert( polygon.begin() + insertionIndex + 1, hole.begin(), hole.end() );
     return false;
 }
-
+ 
     
-void EmbedEdgeHolesIntoParent( Polygon &polygon, struct rect rect )
+void EmbedEdgeHolesIntoParent( Polygon &polygon, struct rect rect, vector<Polygon> &cutouts )
 {
     for ( size_t holeIdx = 0; holeIdx < polygon.holes.size(); holeIdx++ )
     {
         Polygon &unalignedHole = polygon.holes[holeIdx];
-        Polygon hole;
+        //Polygon hole;
         
-        if ( ! PolygonWithIncidentEdge( unalignedHole, rect, hole ) )
+        vector<Polygon> incidentEdges;
+        PolygonsWithIncidentEdge( unalignedHole, rect, incidentEdges );
+        
+        if ( incidentEdges.size() == 0 )
         {
             continue;
         }
         
-        int insertionIndex = IndexOfPreceedingPointOnEdge( polygon, hole[0], rect );
-        if ( insertionIndex == -1 )
+        for ( auto &incidentEdge : incidentEdges )
         {
-            printf("Parent polygon does not contain child polygon\n");
-            continue;
-        }
-        
-        int endInsertionIndex = IndexOfPreceedingPointOnEdge( polygon, hole.back(), rect );
-        if ( endInsertionIndex == -1 )
-        {
-            printf("Parent polygon END does not contain child polygon, but start did???\n");
-            continue;
-        }
-        
-        bool haveRemovedEqualPoints = false;
-        //
-        //  Remove corners if we are chopping off part of a rectangle. i.e. the top part in a rectangle that
-        //  should render only the bottom part
-        //
-        while ( polygon.size() > 1 && hole.size() > 1 && coord_is_equal( polygon[insertionIndex], hole.front() ) )
-        {
-            int nextParentIndex = insertionIndex > 0 ? insertionIndex - 1 : (int) polygon.size() - 1;
-            EdgeType parentNextEdge = EdgeForCoord( polygon[nextParentIndex], rect );
-            EdgeType holeNextEdge = EdgeForCoord( hole[1], rect );
-            
-            if ( parentNextEdge != holeNextEdge )
+            if ( EmbedIncidentEdgeHoleIntoParent( polygon, rect, incidentEdge, cutouts ) )
             {
-                break;
+                polygon.clear();
+                polygon.holes.clear();
+                return;
             }
-            
-            polygon.erase( polygon.begin() + insertionIndex );
-            hole.erase( hole.begin() );
-            
-            insertionIndex--;
-            if ( insertionIndex < 0 ) insertionIndex = (int) polygon.size() - 1;
-            
-            haveRemovedEqualPoints = true;
         }
-        
-        //
-        //  Hole has devoured its parent
-        //
-        if ( polygon.size() + hole.size() < 3 )
-        {
-            polygon.holes.clear();
-            polygon.clear();
-            return;
-        }
-        
-        //
-        //  Recalc insertion if equal corner points have been removed
-        //
-        if ( haveRemovedEqualPoints )
-        {
-            if ( EdgeForCoord( hole[0], rect ) == EdgeNotAnEdge || EdgeForCoord( hole.back(), rect ) == EdgeNotAnEdge )
-            {
-                continue;
-            }
-            
-            insertionIndex = IndexOfPreceedingPointOnEdge( polygon, hole[0], rect );
-            if ( insertionIndex == -1 )
-            {
-                printf("Parent polygon does not contain child polygon\n");
-                continue;
-            }
-            
-            endInsertionIndex = IndexOfPreceedingPointOnEdge( polygon, hole.back(), rect );
-        }
-        
-        bool cutCorners = true;
-        if ( endInsertionIndex == - 1 )
-        {
-            cutCorners = false;
-        }
-        else if ( insertionIndex < endInsertionIndex )
-        {
-            // We cut 1+ corners
-            __unused int nrCutCorners = endInsertionIndex - insertionIndex;
-            assert( nrCutCorners < 4 );
-            
-            polygon.erase( polygon.begin() + insertionIndex + 1, polygon.begin() + endInsertionIndex );
-        }
-        else if ( endInsertionIndex < insertionIndex )
-        {
-            // We're inserting over the start/end boundary of the parent while cutting corners
-            size_t nrCutCornersEnd = polygon.size() - insertionIndex - 1;
-            size_t nrCutCornersStart = endInsertionIndex + 1;
-            
-            assert (nrCutCornersStart + nrCutCornersEnd < 4);
-            assert (nrCutCornersStart > 0);
-            
-            if ( nrCutCornersEnd > 0 )
-            {
-                polygon.erase( polygon.begin() + insertionIndex + 1, polygon.end() );
-            }
-            
-            polygon.erase( polygon.begin(), polygon.begin() + nrCutCornersStart );
-        }
-        
-        //
-        //  Recalc insertion point
-        //
-        if ( cutCorners )
-        {
-            if ( EdgeForCoord( hole[0], rect ) == EdgeNotAnEdge || EdgeForCoord( hole.back(), rect ) == EdgeNotAnEdge )
-            {
-                continue;
-            }
-            
-            insertionIndex = IndexOfPreceedingPointOnEdge( polygon, hole[0], rect );
-            if ( insertionIndex == -1 )
-            {
-                printf("Parent polygon does not contain child polygon\n");
-                continue;
-            }
-            
-            endInsertionIndex = IndexOfPreceedingPointOnEdge( polygon, hole.back(), rect );
-        }
-        
-        polygon.insert( polygon.begin() + insertionIndex + 1, hole.begin(), hole.end() );
         
         polygon.holes.erase( polygon.holes.begin() + holeIdx );
         holeIdx--;
@@ -1225,12 +1249,30 @@ void RayClipPolygon( const Polygon &inputPolygon, struct rect rect, vector<Polyg
     {
         outputPolygons.emplace_back( inputPolygon );
         
+        vector<Polygon> cutouts;
+        
         //
         //  Still embed the holes, if there are any
         //
         for ( auto &polygon : outputPolygons )
         {
-            EmbedEdgeHolesIntoParent( polygon, rect );
+            EmbedEdgeHolesIntoParent( polygon, rect, cutouts );
+        }
+        
+        for ( auto &cutout : cutouts )
+        {
+            vector<Polygon> incidentCutouts;
+            PolygonsWithIncidentEdge(cutout, rect, incidentCutouts);
+            
+            for ( auto &incidentCutout : incidentCutouts )
+            {
+                if ( incidentCutout.size() > 1 )
+                {
+                    vector<Contour> otherContours;
+                    ClosePolygon(incidentCutout, otherContours, rect);
+                    outputPolygons.emplace_back( incidentCutout );
+                }
+            }
         }
 
         return;
@@ -1283,9 +1325,27 @@ void RayClipPolygon( const Polygon &inputPolygon, struct rect rect, vector<Polyg
     ClosePolygons(contours, rect, outputPolygons);
     AssignHolesToOuterPolygons(outputPolygons, internalHoles);
     
+    vector<Polygon> cutouts;
+
     for ( auto &polygon : outputPolygons )
     {
-        EmbedEdgeHolesIntoParent( polygon, rect );
+        EmbedEdgeHolesIntoParent( polygon, rect, cutouts );
+    }
+    
+    for ( auto &cutout : cutouts )
+    {
+        vector<Polygon> incidentCutouts;
+        PolygonsWithIncidentEdge(cutout, rect, incidentCutouts);
+        
+        for ( auto &incidentCutout : incidentCutouts )
+        {
+            if ( incidentCutout.size() > 1 )
+            {
+                vector<Contour> otherContours;
+                ClosePolygon(incidentCutout, otherContours, rect);
+                outputPolygons.emplace_back( incidentCutout );
+            }
+        }
     }
 }
     
